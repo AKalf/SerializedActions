@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 using UnityEditor;
 using UnityEngine;
-using ActionTimeline = SerializedAction.ActionTimeline;
+using ActionTimeline = SerializedAction_Instance.ActionTimeline;
 using ActionsHolder = SerializedActions_MonoBehaviourHolder;
 
 [CustomEditor(typeof(ActionsHolder), true)]
@@ -43,25 +43,25 @@ public class BaseImplementation_Inspector : Editor {
     /// <summary>Draws the inspector of a SerializedAction data holder</summary>
     public void DrawInspector(ActionsHolder targetInstance, SerializedObject serializedObj) {
         selectedTimeline = (ActionTimeline)EditorGUILayout.EnumPopup(selectedTimeline);
-        List<SerializedAction> actionsToShow = null;
+        List<SerializedAction_Instance> actionsToShow = null;
         switch (selectedTimeline) {
-            case ActionTimeline.OnAwake:
+            case ActionTimeline.OnAwake: // On Awake actions
                 actionsToShow = FilterActionsBasedOnString(targetInstance.OnAwakeActions);
                 DrawInspectorForSerializedList(serializedObj, actionsToShow, targetInstance.OnAwakeActions, selectedTimeline);
                 break;
-            case ActionTimeline.OnStart:
+            case ActionTimeline.OnStart: // On Start actions
                 actionsToShow = FilterActionsBasedOnString(targetInstance.OnStartActions);
                 DrawInspectorForSerializedList(serializedObj, actionsToShow, targetInstance.OnStartActions, selectedTimeline);
                 break;
-            case ActionTimeline.OnEnable:
+            case ActionTimeline.OnEnable: // On Enable actions
                 actionsToShow = FilterActionsBasedOnString(targetInstance.OnEnableActions);
                 DrawInspectorForSerializedList(serializedObj, actionsToShow, targetInstance.OnEnableActions, selectedTimeline);
                 break;
-            case ActionTimeline.OnDisable:
+            case ActionTimeline.OnDisable: // On Disable actions
                 actionsToShow = FilterActionsBasedOnString(targetInstance.OnDisableActions);
                 DrawInspectorForSerializedList(serializedObj, actionsToShow, targetInstance.OnDisableActions, selectedTimeline);
                 break;
-            case ActionTimeline.OnPointerEnterInteraction:
+            case ActionTimeline.OnPointerEnterInteraction: // On PointerEnter actions
                 actionsToShow = FilterActionsBasedOnString(targetInstance.OnPointEnterActions);
                 DrawInspectorForSerializedList(serializedObj, actionsToShow, targetInstance.OnPointEnterActions, selectedTimeline);
                 break;
@@ -77,71 +77,50 @@ public class BaseImplementation_Inspector : Editor {
     /// </summary>
     /// <param name="actionsToFilter">The list to search</param>
     /// <returns>Returns a list with all SerializedActions that meet he criteria </returns>
-    private static List<SerializedAction> FilterActionsBasedOnString(List<SerializedAction> actionsToFilter) {
-        List<SerializedAction> actionsToShow = actionsToFilter;
+    private static List<SerializedAction_Instance> FilterActionsBasedOnString(List<SerializedAction_Instance> actionsToFilter) {
+        List<SerializedAction_Instance> actionsToShow = actionsToFilter;
         string triggerSearchString = EditorGUILayout.TextField("Search actions by trigger name: ", SerializedActionSearch.TriggerSearchString);
         string methodSearchString = EditorGUILayout.TextField("Search actions by method name: ", SerializedActionSearch.MethodSearchString);
         actionsToShow = SerializedActionSearch.GetActionsWithTriggerName(actionsToFilter, triggerSearchString);
         actionsToShow = SerializedActionSearch.GetMethodsWithSearchKey(actionsToShow, methodSearchString);
         return actionsToShow;
     }
-
-    private void DrawArguments(SerializedAction action) {
-        System.Object[] args = action.XmlDeserializeFromString(action.serializedArray); // Get arguments values from XML
+    /// <summary>Draw all the arguments of an action</summary>
+    private void DrawArguments(SerializedAction_Instance action) {
+        System.Object[] args = action.XmlDeserializeFromString(action.SerializedArray); // Get arguments values from XML
         bool areThereChanges = false;
-        if (args.Length != action.unityArguments.Length)
-            Debug.LogError("Unity arguments length does not equal deserialized arguments legth for action with method <b>" + action.methodName + "</b>");
-        for (int i = 0; i < action.unityArguments.Length; i++) {
+        if (args.Length != action.UnityArguments.Length)
+            Debug.LogError("Unity arguments length does not equal deserialized arguments legth for action with method <b>" + action.MethodName + "</b>");
+        for (int i = 0; i < action.UnityArguments.Length; i++) {
             if (args[i] == null)
-                args[i] = action.unityArguments[i]; // Populate array with the values from deserialization
+                args[i] = action.UnityArguments[i]; // Populate array with the values from deserialization
         }
         EditorGUILayout.LabelField("Total arguments deserialized: " + args.Length);
         for (int paramIndex = 0; paramIndex < args.Length; paramIndex++) {
             string paramName = "";
-            if (action.argumentNames != null && paramIndex < action.argumentNames.Count)
-                paramName = action.argumentNames[paramIndex]; // Get name from seriliazed names in action object
+            if (action.ArgumentNames != null && paramIndex < action.ArgumentNames.Count)
+                paramName = action.ArgumentNames[paramIndex]; // Get name from seriliazed names in action object
             else if (args[paramIndex] != null)
                 paramName = args[paramIndex].ToString(); // if couldnt retrieve from action's list, assign value.ToString()
-            Type argType = FindPrimitiveType(action.argumentTypesNames[paramIndex]); // Try to find type as primitive
+            Type argType = FindPrimitiveType(action.ArgumentTypesNames[paramIndex]); // Try to find type as primitive
             if (argType == null) // so it is not primitive
-                argType = SerializedAction.GetType(action.argumentTypesNames[paramIndex]); // any other case
-            System.Object oldArg = args[paramIndex];
-
-            if (args[paramIndex] == null) {   // Argument has not been defined
-                args[paramIndex] = EditorDrawing.UnityObjectField<UnityEngine.Object>(
-                    args[paramIndex] as UnityEngine.Object, // The object value
-                    SerializedAction.GetType(action.argumentTypesNames[paramIndex]), // Retrieve type for serialized name
-                    paramName); // Parameter name
-                continue;
-            }
-            // Argument is type of UnityEngine.Object
-            else if (argType != null && (argType.IsSubclassOf(typeof(UnityEngine.Object)) || argType == typeof(UnityEngine.Object))) {
-                args[paramIndex] = EditorDrawing.UnityObjectField<UnityEngine.Object>(args[paramIndex] as UnityEngine.Object, argType, paramName);
+                argType = SerializedAction_Instance.GetType(action.ArgumentTypesNames[paramIndex]); // any other case
+            if (argType != null) { // Draw argument to inspector
+                System.Object oldArg = args[paramIndex];
+                args[paramIndex] = EditorDrawing.DrawArgumentIfType(args[paramIndex], argType, paramName);
                 if (oldArg != args[paramIndex])
-                    areThereChanges = true;
-            }
-            // Argument is type of Component
-            else if (argType != null && (argType.IsSubclassOf(typeof(Component)) || argType == typeof(Component))) {
-                args[paramIndex] = EditorDrawing.UnityObjectField<Component>(args[paramIndex] as Component, argType, paramName);
-                if (oldArg != args[paramIndex])
-                    areThereChanges = true;
-            }
-            // Argument is type of Primitive
-            else {
-                args[paramIndex] = EditorDrawing.PrimitiveField(args[paramIndex], argType, paramName);
-                if (oldArg.Equals(args[paramIndex]) == false)
                     areThereChanges = true;
             }
             if (areThereChanges) {
-                if (action.arguments == null)
-                    action.arguments = new System.Object[args.Length];
-                if (action.unityArguments == null)
-                    action.unityArguments = new UnityEngine.Object[args.Length];
+                if (action.Arguments == null)
+                    action.Arguments = new System.Object[args.Length];
+                if (action.UnityArguments == null)
+                    action.UnityArguments = new UnityEngine.Object[args.Length];
                 if (argType != null && (argType == typeof(UnityEngine.Object) || argType.IsSubclassOf(typeof(UnityEngine.Object))))
-                    action.unityArguments[paramIndex] = args[paramIndex] as UnityEngine.Object;
+                    action.UnityArguments[paramIndex] = args[paramIndex] as UnityEngine.Object;
                 else {
-                    action.arguments[paramIndex] = args[paramIndex];
-                    action.serializedArray = action.XmlSerializeToString(action.arguments);
+                    action.Arguments[paramIndex] = args[paramIndex];
+                    action.SerializedArray = action.XmlSerializeToString(action.Arguments);
                 }
                 EditorUtility.SetDirty(target);
             }
@@ -149,6 +128,7 @@ public class BaseImplementation_Inspector : Editor {
         }
 
     }
+
     /// <summary>Searches for primitive type whose name matches provided string</summary>
     /// <returns>Returns the primitive type whose name matches provided string</returns>
     private Type FindPrimitiveType(string typeInString) {
@@ -170,7 +150,7 @@ public class BaseImplementation_Inspector : Editor {
     /// <param name="realList">The actual list the displayed actions belong to. Is used in case the user selects to delete an action from existance</param>
     /// <param name="selectedTimeline">In case the list is "OnPointerEnterInteraction", draw field for the action's trigger object</param>
     private void DrawInspectorForSerializedList(SerializedObject objRef,
-        List<SerializedAction> listToShow, List<SerializedAction> realList,
+        List<SerializedAction_Instance> listToShow, List<SerializedAction_Instance> realList,
         ActionTimeline selectedTimeline) {
         EditorGUILayout.LabelField("Total actions: " + listToShow.Count, EditorStyles.largeLabel);
         GUILayout.Space(10);
@@ -178,19 +158,19 @@ public class BaseImplementation_Inspector : Editor {
             if (showParameters == null)
                 showParameters = new bool[listToShow.Count];
             for (int i = 0; i < listToShow.Count; i++) {
-                SerializedAction action = listToShow[i];
+                SerializedAction_Instance action = listToShow[i];
                 // Draw action's trigger GameObject -------------------------------------------------------------------------------------------------------
                 if (selectedTimeline == ActionTimeline.OnPointerEnterInteraction) {
-                    action.triggerInput = EditorDrawing.UnityObjectField<UnityEngine.Object>(action.triggerInput, action.triggerInput.GetType(), "Trigger: ", true, false);
-                    if (action.triggerInput.GetType().IsSubclassOf(typeof(UnityEngine.UI.Selectable)) == false)
-                        action.triggerType = (UnityEngine.EventSystems.EventTriggerType)EditorGUILayout.EnumPopup(action.triggerType);
+                    action.TriggerInput = EditorDrawing.UnityObjectField<UnityEngine.Object>(action.TriggerInput, action.TriggerInput.GetType(), "Trigger: ", true, false);
+                    if (action.TriggerInput.GetType().IsSubclassOf(typeof(UnityEngine.UI.Selectable)) == false)
+                        action.TriggerType = (UnityEngine.EventSystems.EventTriggerType)EditorGUILayout.EnumPopup(action.TriggerType);
                 }
                 Color prev = GUI.color;
                 GUI.backgroundColor = Color.green;
-                EditorGUILayout.LabelField("Method: <b>" + action.methodName + "</b>, in class: <b>" + action.ClassName + "</b>", SerializedActions_InspectorElements.InfoField.Style, SerializedActions_InspectorElements.InfoField.Options);
+                EditorGUILayout.LabelField("Method: <b>" + action.MethodName + "</b>, in class: <b>" + action.ClassName + "</b>", SerializedActions_InspectorElements.InfoField.Style, SerializedActions_InspectorElements.InfoField.Options);
                 GUI.backgroundColor = prev;
                 // Draw paremeter fields -------------------------------------------------------------------------------------------------------
-                if (action.unityArguments != null && action.unityArguments.Length > 0 || (action.arguments != null && action.arguments.Length > 0)) {
+                if (action.UnityArguments != null && action.UnityArguments.Length > 0 || (action.Arguments != null && action.Arguments.Length > 0)) {
                     if (i < showParameters.Length && (showParameters[i] = EditorGUILayout.Foldout(showParameters[i], "Parameters", true)))
                         DrawArguments(action);
                 }
@@ -228,13 +208,13 @@ public class BaseImplementation_Inspector : Editor {
         /// <param name="actions">The list of actions to search in</param>
         /// <param name="searchString">The string to check if contained in actions' triggers</param>
         /// <returns>Returns a list of actions that met the criteria</returns>
-        public static List<SerializedAction> GetActionsWithTriggerName(List<SerializedAction> actions, string searchString) {
+        public static List<SerializedAction_Instance> GetActionsWithTriggerName(List<SerializedAction_Instance> actions, string searchString) {
             triggerSearchString = searchString;
             if (string.IsNullOrEmpty(triggerSearchString))
                 return actions;
-            List<SerializedAction> results = new List<SerializedAction>();
+            List<SerializedAction_Instance> results = new List<SerializedAction_Instance>();
             for (int i = 0; i < actions.Count; i++) {
-                if (actions[i].triggerInput.name.ToLower().Contains(searchString.ToLower()))
+                if (actions[i].TriggerInput.name.ToLower().Contains(searchString.ToLower()))
                     results.Add(actions[i]);
             }
             return results;
@@ -243,13 +223,13 @@ public class BaseImplementation_Inspector : Editor {
         /// <param name="actions">The list of actions to search in</param>
         /// <param name="searchString">The string to check if contained in actions' method name</param>
         /// <returns>Returns a list of actions that met the criteria</returns>
-        public static List<SerializedAction> GetMethodsWithSearchKey(List<SerializedAction> actions, string searchString) {
+        public static List<SerializedAction_Instance> GetMethodsWithSearchKey(List<SerializedAction_Instance> actions, string searchString) {
             methodSearchString = searchString;
             if (string.IsNullOrEmpty(methodSearchString))
                 return actions;
-            List<SerializedAction> results = new List<SerializedAction>();
+            List<SerializedAction_Instance> results = new List<SerializedAction_Instance>();
             for (int i = 0; i < actions.Count; i++) {
-                if (actions[i].methodName.ToLower().Contains(searchString.ToLower())) {
+                if (actions[i].MethodName.ToLower().Contains(searchString.ToLower())) {
                     results.Add(actions[i]);
                 }
             }

@@ -7,13 +7,13 @@ using UnityEngine;
 
 public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests {
     private static string debugMessage = "";
-    private static SerializedAction action = null;
-    private static SerializedActions_MonoBehaviourHolder implementation = null;
+    private static SerializedActionData action = null;
+    private static SerializedAction_MonoBehaviour implementation = null;
     private static MethodInfo method = null;
     private static System.Object[] deserialized = null;
     private static ParameterInfo[] actual = null;
 
-    public static bool CheckMethodParameters(MethodInfo methodInfo, SerializedAction serializedAction, SerializedActions_MonoBehaviourHolder imple) {
+    public static bool CheckMethodParameters(MethodInfo methodInfo, SerializedActionData serializedAction, SerializedAction_MonoBehaviour imple) {
 
         action = serializedAction;
         implementation = imple;
@@ -40,8 +40,8 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
             debugMessage += string.Format(NeedToCheckActionWarning, imple.name, methodInfo.Name, action.ClassName);
             debugMessage += "\nTrying to resolve conflicts...";
 
-            action.arguments = new System.Object[actual.Length];
-            action.unityArguments = new UnityEngine.Object[actual.Length];
+            action.Arguments = new System.Object[actual.Length];
+            action.UnityArguments = new UnityEngine.Object[actual.Length];
 
             List<System.Object> resolvedArguments = new List<object>();
             // Try to resolve conflict by finding a parameter with same name and type
@@ -52,25 +52,25 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
             ForceResolve();
 
             // Reset parameter names and types
-            action.argumentTypesNames.Clear();
-            action.argumentNames.Clear();
+            action.ArgumentTypesNames.Clear();
+            action.ArgumentNames.Clear();
             foreach (ParameterInfo info in actual) {
-                action.argumentTypesNames.Add(info.ParameterType.Name);
-                action.argumentNames.Add(info.Name);
+                action.ArgumentTypesNames.Add(info.ParameterType.Name);
+                action.ArgumentNames.Add(info.Name);
             }
-            action.serializedArray = action.XmlSerializeToString(action.arguments);
+            action.SerializedArray = action.XmlSerializeToString(action.Arguments);
         }
 
         else {
             debugMessage += "\nTypes were <color=green>correct</color>!";
-            action.argumentNames.Clear();
+            action.ArgumentNames.Clear();
             foreach (ParameterInfo info in actual) {
-                action.argumentNames.Add(info.Name);
+                action.ArgumentNames.Add(info.Name);
             }
             Debug.Log(debugMessage + "\n\n");
             return true;
         }
-        action.serializedArray = action.XmlSerializeToString(action.arguments);
+        action.SerializedArray = action.XmlSerializeToString(action.Arguments);
         Debug.Log(debugMessage + "\n\n");
         debugMessage = "";
         return false;
@@ -78,10 +78,10 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
     }
 
     private static bool GetDeserializedArguments() {
-        deserialized = action.XmlDeserializeFromString(action.serializedArray);
+        deserialized = action.XmlDeserializeFromString(action.SerializedArray);
 
         if (deserialized == null) {
-            Debug.LogWarning(string.Format(deserializedArrayIsNUll, action.serializedArray), implementation.gameObject);
+            Debug.LogWarning(string.Format(deserializedArrayIsNUll, action.SerializedArray), implementation.gameObject);
             return false;
         }
         else
@@ -90,8 +90,8 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
     private static bool IsArgumentsLentgthEqual(int serializedLength, int actualLength) {
         if (serializedLength != actualLength) {
             // Debug warning 
-            Debug.LogWarning(string.Format(ArgumentsLengthConflict, action.methodName, action.ClassName) + "\n\n", implementation.gameObject);
-            debugMessage += string.Format(ArgumentsLengthConflict, action.methodName, action.ClassName);
+            Debug.LogWarning(string.Format(ArgumentsLengthConflict, action.MethodName, action.ClassName) + "\n\n", implementation.gameObject);
+            debugMessage += string.Format(ArgumentsLengthConflict, action.MethodName, action.ClassName);
             return false;
         }
         else
@@ -101,13 +101,13 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
         debugMessage += "\nChecking if types are equal...";
         bool areAllEqual = true;
         for (int i = 0; i < actual.Length; i++) {
-            if (i < action.argumentTypesNames.Count && actual[i].ParameterType.Name != action.argumentTypesNames[i]) {
+            if (i < action.ArgumentTypesNames.Count && actual[i].ParameterType.Name != action.ArgumentTypesNames[i]) {
                 // Debig warnig for Type conflict
-                debugMessage += string.Format(ArgumentTypesConflict, actual[i].ParameterType.Name, action.argumentTypesNames[i]);
-                Debug.LogWarning(string.Format(ArgumentTypesConflict, actual[i].ParameterType.Name, action.argumentTypesNames[i] + "\n\n"), implementation.gameObject);
+                debugMessage += string.Format(ArgumentTypesConflict, actual[i].ParameterType.Name, action.ArgumentTypesNames[i]);
+                Debug.LogWarning(string.Format(ArgumentTypesConflict, actual[i].ParameterType.Name, action.ArgumentTypesNames[i] + "\n\n"), implementation.gameObject);
                 areAllEqual = false;
             }
-            else if (i >= action.argumentTypesNames.Count)
+            else if (i >= action.ArgumentTypesNames.Count)
                 areAllEqual = false;
         }
         return areAllEqual;
@@ -117,8 +117,8 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
         for (int j = 0; j < actual.Length; j++) {
             for (int i = 0; i < deserialized.Length; i++) {
                 if (deserialized[i] != null
-                    && AreStringsEqual(actual[j].Name, action.argumentNames[i])
-                    && AreStringsEqual(actual[j].ParameterType.Name, action.argumentTypesNames[i])) {
+                    && AreStringsEqual(actual[j].Name, action.ArgumentNames[i])
+                    && AreStringsEqual(actual[j].ParameterType.Name, action.ArgumentTypesNames[i])) {
 
                     // BODY:
                     string msg = string.Format(ResolvedConflict, actual[j].Name, actual[j].ParameterType.Name, j, method.Name, deserialized[i].ToString());
@@ -147,8 +147,8 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
         }
     }
     private static void ForceResolve() {
-        for (int i = 0; i < action.arguments.Length; i++) {
-            if (action.arguments[i] == null && action.unityArguments[i] == null) {
+        for (int i = 0; i < action.Arguments.Length; i++) {
+            if (action.Arguments[i] == null && action.UnityArguments[i] == null) {
                 if (actual[i].ParameterType.IsSubclassOf(typeof(UnityEngine.Object)) || actual[i].ParameterType == typeof(UnityEngine.Object))
                     AddEmptyArgument(new UnityEngine.Object(), actual[i], i, action, ref debugMessage);
                 else
@@ -165,39 +165,39 @@ public class SerializedAction_Parameters_UnitTest : SerializedActions_UnitTests 
         else
             return false;
     }
-    private static void AddEmptyArgument(System.Object argument, ParameterInfo actual, int indexOfArgument, SerializedAction action, ref string debugMessage) {
+    private static void AddEmptyArgument(System.Object argument, ParameterInfo actual, int indexOfArgument, SerializedActionData action, ref string debugMessage) {
         // set the new value as the old one as Unity Object
         if (argument.GetType().IsSubclassOf(typeof(UnityEngine.Object)) || argument.GetType() == typeof(UnityEngine.Object))
-            action.unityArguments[indexOfArgument] = argument as UnityEngine.Object;
+            action.UnityArguments[indexOfArgument] = argument as UnityEngine.Object;
         // set the new value as the old one as it is (should be primitive)
         else
             FindSystemType(action, argument, argument.GetType(), actual, indexOfArgument);
 
         // Set type name
-        if (indexOfArgument < action.argumentTypesNames.Count)
-            action.argumentTypesNames[indexOfArgument] = actual.ParameterType.Name;
+        if (indexOfArgument < action.ArgumentTypesNames.Count)
+            action.ArgumentTypesNames[indexOfArgument] = actual.ParameterType.Name;
         else
-            action.argumentTypesNames.Add(actual.ParameterType.Name);
+            action.ArgumentTypesNames.Add(actual.ParameterType.Name);
 
         // Set parameter name
-        if (indexOfArgument < action.argumentNames.Count)
-            action.argumentNames[indexOfArgument] = actual.Name;
+        if (indexOfArgument < action.ArgumentNames.Count)
+            action.ArgumentNames[indexOfArgument] = actual.Name;
         else
-            action.argumentNames.Add(actual.Name);
+            action.ArgumentNames.Add(actual.Name);
 
     }
-    private static void FindSystemType(SerializedAction action, System.Object arg, Type argumentType, ParameterInfo actual, int argumentIndex) {
+    private static void FindSystemType(SerializedActionData action, System.Object arg, Type argumentType, ParameterInfo actual, int argumentIndex) {
         Debug.Log("Adding new system.obj field: " + actual.Name);
         if (arg == null) {
             Debug.Log("Default value: " + actual.RawDefaultValue);
             arg = actual.RawDefaultValue;
         }
         if (argumentType == typeof(int) || argumentType == typeof(float))
-            action.arguments[argumentIndex] = arg == null ? 0 : arg;
+            action.Arguments[argumentIndex] = arg == null ? 0 : arg;
         else if (argumentType == typeof(string))
-            action.arguments[argumentIndex] = arg == null ? "" : arg;
+            action.Arguments[argumentIndex] = arg == null ? "" : arg;
         else if (argumentType == typeof(bool))
-            action.arguments[argumentIndex] = arg == null ? false : arg;
+            action.Arguments[argumentIndex] = arg == null ? false : arg;
     }
     // Debug strings
     #region Debug Strings

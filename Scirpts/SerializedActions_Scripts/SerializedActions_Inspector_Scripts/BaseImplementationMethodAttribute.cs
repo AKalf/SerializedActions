@@ -9,7 +9,6 @@ public class BaseImplementationMethodAttribute : Attribute {
     public int MethodID => id;
 
     public BaseImplementationMethodAttribute(int ID) {
-
         id = ID;
     }
 }

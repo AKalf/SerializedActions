@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using ActionTimeline = SerializedAction.ActionTimeline;
+using ActionTimeline = SerializedAction_Instance.ActionTimeline;
 
 public class NewAction_EditorWindow : EditorWindow {
 
@@ -171,11 +171,9 @@ public class NewAction_EditorWindow : EditorWindow {
     private bool SelectNewActionParameters(MethodInfo methodInfo) {
         if (parameters.Count > 0) {
             for (int index = 0; index < parameters.Count; index++) {
-                if (parameterTypes[index].IsSubclassOf(typeof(UnityEngine.Object)) || parameterTypes[index].GetType() == typeof(UnityEngine.Object)) {
-                    parameters[index] = EditorDrawing.UnityObjectField<UnityEngine.Object>(parameters[index] as UnityEngine.Object, parameterTypes[index], parametersNames[index], true, false);
-                }
-                else
-                    parameters[index] = EditorDrawing.PrimitiveField(parameters[index], parameterTypes[index], parametersNames[index]);
+                parameters[index] = EditorDrawing.DrawArgumentIfType(
+                    parameters[index], parameterTypes[index], parametersNames[index],
+                    shouldShowName: true, shouldShowType: false);
             }
             EditorUtility.SetDirty(targetInstance);
             return true;
@@ -212,27 +210,27 @@ public class NewAction_EditorWindow : EditorWindow {
 
     /// <summary>Construct and add the new action to the list specified</summary>
     /// <param name="actionList"></param>
-    private void AddNewAction(List<SerializedAction> actionList) {
+    private void AddNewAction(List<SerializedAction_Instance> actionList) {
         if (selectedTimeline == ActionTimeline.OnPointerEnterInteraction && triggerObject == null) {
             EditorGUILayout.HelpBox("Trigger gameobject has not been defined", MessageType.Error);
             Debug.LogError("Trigger gameobject has not been defined");
         }
         else {
-            SerializedAction action;
-            action = new SerializedAction(triggerObject, objType, selectedMethodName, parameters.ToArray(), parametersNames, parametersTypesNames);
+            SerializedAction_Instance action;
+            action = new SerializedAction_Instance(triggerObject, objType, selectedMethodName, parameters.ToArray(), parametersNames, parametersTypesNames);
             actionList.Add(action);
             EditorUtility.SetDirty(targetInstance);
             try {
                 debugMessage += "\nAdded new action with" +
                     "\nTimeline: <b>" + selectedTimeline + "</b>" +
-                    "\nTrigger: <b>" + action.triggerInput + "</b>" +
+                    "\nTrigger: <b>" + action.TriggerInput + "</b>" +
                     "\nType: <b>" + action.ClassName + "</b>" +
-                    " and method: <b>" + action.methodName + "</b>" +
-                    "\nTotal parameters: <b>" + action.arguments.Length + "</b>";
-                for (int i = 0; i < action.arguments.Length; i++) {
-                    debugMessage += "\nName: <b>" + action.argumentNames[i] + "</b>, ";
-                    debugMessage += "Type: <b>" + action.argumentTypesNames[i] + "</b>, ";
-                    debugMessage += "Object: <b>" + action.arguments[i] + "</b>";
+                    " and method: <b>" + action.MethodName + "</b>" +
+                    "\nTotal parameters: <b>" + action.Arguments.Length + "</b>";
+                for (int i = 0; i < action.Arguments.Length; i++) {
+                    debugMessage += "\nName: <b>" + action.ArgumentNames[i] + "</b>, ";
+                    debugMessage += "Type: <b>" + action.ArgumentTypesNames[i] + "</b>, ";
+                    debugMessage += "Object: <b>" + action.Arguments[i] + "</b>";
                 }
                 Debug.Log(debugMessage + "\n\n");
                 debugMessage = "";
@@ -259,10 +257,9 @@ public class NewAction_EditorWindow : EditorWindow {
 
     /// <summary>Draws the inspector for adding a new action to the list specified </summary>
     /// <param name="actionsList">The list to add new action</param>
-    private void AddNewActionToListInspector(List<SerializedAction> actionsList) {
+    private void AddNewActionToListInspector(List<SerializedAction_Instance> actionsList) {
         if (SelectNewActionMonoScript()) {
             if (GUILayout.Button("Get methods") || hasPressedGetMethods) {
-                Debug.Log("Pressed");
                 if (SelectNewActionMethod()) {
                     hasPressedGetMethods = true;
                     if (GUILayout.Button("Get parameters for method: " + selectedMethodName)) {

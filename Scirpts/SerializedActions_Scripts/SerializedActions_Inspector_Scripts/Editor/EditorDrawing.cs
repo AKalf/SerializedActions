@@ -88,4 +88,19 @@ public class EditorDrawing {
 
     }
 
+    /// <summary>Draw an editor field for any Object </summary>
+    /// <param name="argument">Argument value</param>
+    /// <param name="argumentType">Type of argument</param>
+    /// <param name="paramName">Parameter name</param>
+    /// <returns>Returns the value retreived from the editor</returns>
+    public static object DrawArgumentIfType(object argument, Type argumentType, string paramName, bool shouldShowName = true, bool shouldShowType = true) {
+        if (argument == null)
+            return EditorDrawing.UnityObjectField<UnityEngine.Object>(argument as UnityEngine.Object, argumentType, paramName, shouldShowName, shouldShowType);
+        else if (argumentType.IsSubclassOf(typeof(UnityEngine.Object)) || argumentType == typeof(UnityEngine.Object))
+            return EditorDrawing.UnityObjectField<UnityEngine.Object>(argument as UnityEngine.Object, argumentType, paramName, shouldShowName, shouldShowType);
+        else if (argumentType.IsSubclassOf(typeof(Component)) || argumentType == typeof(Component))
+            return EditorDrawing.UnityObjectField<Component>(argument as Component, argumentType, paramName, shouldShowName, shouldShowType);
+        else
+            return EditorDrawing.PrimitiveField(argument, argumentType, paramName);
+    }
 }

@@ -7,14 +7,14 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 /// <summary>Derive your class from this in order to make it compatible with SerializedActions Inspector </summary>
-public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
+public class SerializedAction_MonoBehaviour : MonoBehaviour {
     [SerializeField]
-    public List<SerializedAction>
-        OnAwakeActions = new List<SerializedAction>(),
-        OnStartActions = new List<SerializedAction>(),
-        OnEnableActions = new List<SerializedAction>(),
-        OnDisableActions = new List<SerializedAction>(),
-        OnPointEnterActions = new List<SerializedAction>();
+    public List<SerializedActionData>
+        OnAwakeActions = new List<SerializedActionData>(),
+        OnStartActions = new List<SerializedActionData>(),
+        OnEnableActions = new List<SerializedActionData>(),
+        OnDisableActions = new List<SerializedActionData>(),
+        OnPointEnterActions = new List<SerializedActionData>();
 
     private string debugMessage;
 
@@ -30,8 +30,8 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
 
     protected void AssignPointerEnterActionsToGameObjects() {
         // Assign SerialisedActions to Selectables
-        foreach (SerializedAction action in OnPointEnterActions) {
-            if (action.triggerInput.GetType().IsSubclassOf(typeof(Selectable)))
+        foreach (SerializedActionData action in OnPointEnterActions) {
+            if (action.TriggerInput.GetType().IsSubclassOf(typeof(Selectable)))
                 SetSelectableTrigger(action);
             else
                 SetGameObjectTrigger(action);
@@ -55,9 +55,9 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
             AssignPointerEnterActionsToGameObjects();
     }
 
-    private void InvokeSerialisedAction(List<SerializedAction> actions, string timeline) {
+    private void InvokeSerialisedAction(List<SerializedActionData> actions, string timeline) {
         if (actions != null && actions.Count > 0) {
-            foreach (SerializedAction action in actions) {
+            foreach (SerializedActionData action in actions) {
 #if UNITY_EDITOR
                 Debug_ActionDeserialisation(action, timeline);
 #endif
@@ -67,25 +67,25 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
         else
             actions = null;
     }
-    private void SetGameObjectTrigger(SerializedAction action) {
+    private void SetGameObjectTrigger(SerializedActionData action) {
         GameObject triggerAsG = null;
 #if UNITY_EDITOR
         AddDebug_ActionTrigger(action, triggerAsG);
         try {
 #endif
-            if (action.triggerInput.GetType() == typeof(GameObject))
-                triggerAsG = action.triggerInput as GameObject;
-            else if (action.triggerInput.GetType().IsSubclassOf(typeof(MonoBehaviour)))
-                triggerAsG = ((MonoBehaviour)action.triggerInput).gameObject;
-            else if (action.triggerInput.GetType().IsSubclassOf(typeof(Component)))
-                triggerAsG = ((Component)action.triggerInput).gameObject;
+            if (action.TriggerInput.GetType() == typeof(GameObject))
+                triggerAsG = action.TriggerInput as GameObject;
+            else if (action.TriggerInput.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                triggerAsG = ((MonoBehaviour)action.TriggerInput).gameObject;
+            else if (action.TriggerInput.GetType().IsSubclassOf(typeof(Component)))
+                triggerAsG = ((Component)action.TriggerInput).gameObject;
 
             EventTrigger trigger = triggerAsG.GetComponent<EventTrigger>();
             if (trigger == null)
                 trigger = triggerAsG.gameObject.AddComponent<EventTrigger>();
             EventTrigger.Entry entry = new EventTrigger.Entry();
-            entry.eventID = action.triggerType;
-            entry.callback.AddListener(data => { if (action.action == null) action.GetAction("Selectables").Invoke(); else action.action.Invoke(); });
+            entry.eventID = action.TriggerType;
+            entry.callback.AddListener(data => { if (action.Action == null) action.GetAction("Selectables").Invoke(); else action.Action.Invoke(); });
             trigger.triggers.Add(entry);
 #if UNITY_EDITOR
         }
@@ -96,8 +96,8 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
     }
 
 
-    private void SetSelectableTrigger(SerializedAction action) {
-        Selectable input = action.triggerInput as Selectable;
+    private void SetSelectableTrigger(SerializedActionData action) {
+        Selectable input = action.TriggerInput as Selectable;
 #if UNITY_EDITOR
         AddDebug_ActionTrigger(action, input);
         try {
@@ -105,37 +105,37 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
             // Button 
             #region Button
             if (input.GetType() == typeof(Button)) {
-                if (action.action == null)
+                if (action.Action == null)
                     ((Button)input).onClick.AddListener(action.GetAction("Selectables").Invoke);
                 else
-                    ((Button)input).onClick.AddListener(action.action);
+                    ((Button)input).onClick.AddListener(action.Action);
             }
             #endregion
             // Toggle
             #region Toggle
             else if (input.GetType() == typeof(Toggle)) {
-                if (action.action == null)
+                if (action.Action == null)
                     ((Toggle)input).onValueChanged.AddListener(value => action.GetAction("Selectables").Invoke());
                 else
-                    ((Toggle)input).onValueChanged.AddListener(value => action.action.Invoke());
+                    ((Toggle)input).onValueChanged.AddListener(value => action.Action.Invoke());
             }
             #endregion
             // Dropdown
             #region Dropdown
             else if (input.GetType() == typeof(Dropdown)) {
-                if (action.action == null)
+                if (action.Action == null)
                     ((Dropdown)input).onValueChanged.AddListener(value => action.GetAction("Selectables").Invoke());
                 else
-                    ((Dropdown)input).onValueChanged.AddListener(value => action.action.Invoke());
+                    ((Dropdown)input).onValueChanged.AddListener(value => action.Action.Invoke());
             }
             #endregion
             // Input Field
             #region Input Field
             else if (input.GetType() == typeof(InputField)) {
-                if (action.action == null)
+                if (action.Action == null)
                     ((InputField)input).onEndEdit.AddListener(value => action.GetAction("Selectables").Invoke());
                 else
-                    ((InputField)input).onEndEdit.AddListener(value => action.action.Invoke());
+                    ((InputField)input).onEndEdit.AddListener(value => action.Action.Invoke());
             }
             #endregion
 #if UNITY_EDITOR
@@ -170,23 +170,23 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
     //  Debug Functions
     #region Debug Functions
 #if UNITY_EDITOR
-    private void Debug_ActionDeserialisation(SerializedAction action, string timeline) {
+    private void Debug_ActionDeserialisation(SerializedActionData action, string timeline) {
         debugMessage += "Starting invokation of <b>" + timeline + "<b>\n";
         try {
-            debugMessage += "Deserialized action: " + action.methodName + '\n';
-            if (action.unityArguments != null)
-                Debug_ActionParameters(action.unityArguments, action.argumentNames, true);
-            if (action.arguments != null)
-                Debug_ActionParameters(action.arguments, action.argumentNames, false);
+            debugMessage += "Deserialized action: " + action.MethodName + '\n';
+            if (action.UnityArguments != null)
+                Debug_ActionParameters(action.UnityArguments, action.ArgumentNames, true);
+            if (action.Arguments != null)
+                Debug_ActionParameters(action.Arguments, action.ArgumentNames, false);
             action.GetAction(timeline).Invoke();
-            debugMessage += "Deserialisation has finished successfully for action with method: " + action.methodName + '\n';
+            debugMessage += "Deserialisation has finished successfully for action with method: " + action.MethodName + '\n';
         }
         catch (Exception ex) {
             CatchListException(ex, timeline);
             System.Diagnostics.StackTrace st = new System.Diagnostics.StackTrace(ex.InnerException, true);
             System.Diagnostics.StackFrame frame = st.GetFrame(0);
             int line = frame.GetFileLineNumber();
-            Debug.LogError("Errow while debugging action: " + action.methodName + ", of script type: " + action.ClassName + ", on instance: " + this.name +
+            Debug.LogError("Errow while debugging action: " + action.MethodName + ", of script type: " + action.ClassName + ", on instance: " + this.name +
                 "\nException: " + ex.InnerException.Message +
                 "\nClass: " + ex.InnerException.TargetSite.DeclaringType +
                 "\nMethod: " + ex.InnerException.TargetSite +
@@ -213,14 +213,14 @@ public class SerializedActions_MonoBehaviourHolder : MonoBehaviour {
         debugMessage += newMessage;
         return newMessage;
     }
-    private void AddDebug_ActionTrigger(SerializedAction action, UnityEngine.Object input) {
+    private void AddDebug_ActionTrigger(SerializedActionData action, UnityEngine.Object input) {
         if (input == null)
-            Debug.LogError("Action has <NULL> trigger! Instance with error: " + this.name + "\n Method: " + action.methodName + ", Script with method: " + action.ClassName);
-        debugMessage += "Deserialized method name: " + action.methodName + ", with trigger: " + action.triggerInput.name + '\n';
-        if (action.unityArguments != null)
-            Debug_ActionParameters(action.unityArguments, action.argumentNames, true);
-        if (action.arguments != null)
-            Debug_ActionParameters(action.arguments, action.argumentNames, false);
+            Debug.LogError("Action has <NULL> trigger! Instance with error: " + this.name + "\n Method: " + action.MethodName + ", Script with method: " + action.ClassName);
+        debugMessage += "Deserialized method name: " + action.MethodName + ", with trigger: " + action.TriggerInput.name + '\n';
+        if (action.UnityArguments != null)
+            Debug_ActionParameters(action.UnityArguments, action.ArgumentNames, true);
+        if (action.Arguments != null)
+            Debug_ActionParameters(action.Arguments, action.ArgumentNames, false);
     }
     private string GetDebug_ParameterName<T>(int currentArgumentIndex, T[] arguments, List<string> parmatersNames) {
         string paramName = "";

@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 using UnityEditor;
@@ -7,9 +8,10 @@ using UnityEngine;
 
 public class BaseImplementation_UnitTest_Inspector : Editor {
 
-    bool showImplementations = false;
-    bool[] showImplementation = null;
-    Dictionary<SerializedActions_MonoBehaviourHolder, bool[]> actions = new Dictionary<SerializedActions_MonoBehaviourHolder, bool[]>();
+    private bool showImplementations = false;
+    private bool[] showImplementation = null;
+    private Dictionary<SerializedActions_MonoBehaviourHolder, bool[]> actions = new Dictionary<SerializedActions_MonoBehaviourHolder, bool[]>();
+    private const int TIMELINES_COUNT = 5;
     public override void OnInspectorGUI() {
         SerializedActions_UnitTests targetInstance = (SerializedActions_UnitTests)target;
         SerializedObject objInstance = new SerializedObject(targetInstance);
@@ -17,10 +19,10 @@ public class BaseImplementation_UnitTest_Inspector : Editor {
         base.OnInspectorGUI();
         showImplementations = EditorGUILayout.Foldout(showImplementations, "Show implementations");
         if (showImplementations) {
-            if (showImplementation == null) {
+            if (showImplementation == null) { // Initialise
                 showImplementation = new bool[targetInstance.implementationsInProject.Count];
                 foreach (SerializedActions_MonoBehaviourHolder imple in targetInstance.implementationsInProject)
-                    actions.Add(imple, new bool[5]);
+                    actions.Add(imple, new bool[TIMELINES_COUNT]);
             }
             for (int i = 0; i < showImplementation.Length; i++) {
                 ShowImplementationLists(ref showImplementation[i], targetInstance.implementationsInProject[i]);
@@ -28,21 +30,18 @@ public class BaseImplementation_UnitTest_Inspector : Editor {
             }
 
         }
-        if (GUILayout.Button("Check actions")) {
+        if (GUILayout.Button("Check actions"))
             targetInstance.CheckActions();
-        }
-        if (GUILayout.Button("Clear registed actions")) {
+        if (GUILayout.Button("Clear registed actions"))
             targetInstance.actionsInProject.Clear();
-        }
         EditorGUILayout.LabelField("Total registered types: " + targetInstance.monoscripts.Count + ". Total type names: " + targetInstance.classesAndMethods.Count);
         if (GUILayout.Button("Clear registed types")) {
             targetInstance.classesAndMethods.Clear();
             SerializedActions_UnitTests.Instance().monoscripts.Clear();
         }
         EditorGUILayout.LabelField("Total registered types by names: " + SerializedActions_UnitTests.Instance().monoscripts.Count);
-        foreach (MonoScript script in SerializedActions_UnitTests.Instance().monoscripts) {
+        foreach (MonoScript script in SerializedActions_UnitTests.Instance().monoscripts)
             EditorGUILayout.LabelField(script.GetClass().Name);
-        }
 
     }
     private void ShowImplementationLists(ref bool foldout, SerializedActions_MonoBehaviourHolder implementation) {
@@ -58,7 +57,7 @@ public class BaseImplementation_UnitTest_Inspector : Editor {
             ShowList(imple.OnPointEnterActions, ref actions[imple][4], "On Select");
         }
     }
-    private void ShowList(List<SerializedAction> actions, ref bool foldout, string listName) {
+    private void ShowList(List<SerializedAction_Instance> actions, ref bool foldout, string listName) {
         if (actions.Count > 0) {
             GUILayout.Space(2.5f);
             GUIStyle s = new GUIStyle(EditorStyles.foldout);
@@ -68,9 +67,9 @@ public class BaseImplementation_UnitTest_Inspector : Editor {
             foldout = EditorGUILayout.Foldout(foldout, listName, s);
             if (foldout) {
                 for (int j = 0; j < actions.Count; j++) {
-                    SerializedAction action = actions[j];
+                    SerializedAction_Instance action = actions[j];
                     EditorGUILayout.LabelField("Script: " + action.ClassName, t);
-                    EditorGUILayout.LabelField("Method: " + action.methodName, t);
+                    EditorGUILayout.LabelField("Method: " + action.MethodName, t);
                     GUILayout.Space(5);
                 }
             }

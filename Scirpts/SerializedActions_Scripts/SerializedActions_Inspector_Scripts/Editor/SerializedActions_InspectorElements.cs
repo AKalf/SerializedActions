@@ -4,7 +4,8 @@ using UnityEditor;
 using UnityEngine;
 
 public static class SerializedActions_InspectorElements {
-
+    private static Element paramName = default, primitiveType = default, numbersField = default, stringField = default, boolField = default,
+        objectField = default, infoField = default;
     public static class Consts {
         public const int paramNameWidth = 150;
         public const int primitiveTypeWidth = 40;
@@ -26,96 +27,29 @@ public static class SerializedActions_InspectorElements {
             Options = options;
         }
     }
-
-    private static Element paramName = default;
-    public static Element ParamName {
-        get {
-            if (paramName.Equals(default(Element)))
-                paramName = new Element(Styles.ParamName, Options.ParamNames);
-            return paramName;
-        }
-    }
-    private static Element primitiveType = default;
-    public static Element PrimitiveType {
-        get {
-            if (primitiveType.Equals(default(Element)))
-                primitiveType = new Element(Styles.PrimitiveType, Options.PrimitiveType);
-            return primitiveType;
-        }
-    }
-
-    private static Element numbersField = default;
-    public static Element NumbersField {
-        get {
-            if (numbersField.Equals(default(Element)))
-                numbersField = new Element(Styles.NumbersField, Options.NumbersField);
-            return numbersField;
-        }
-    }
-
-    private static Element stringField = default;
-    public static Element StringField {
-        get {
-            if (stringField.Equals(default(Element)))
-                stringField = new Element(Styles.StringField, Options.StringField);
-            return stringField;
-        }
-    }
-
-    private static Element boolField = default;
-    public static Element BoolField {
-        get {
-            if (boolField.Equals(default(Element)))
-                boolField = new Element(Styles.BoolField, Options.BoolField);
-            return boolField;
-        }
-    }
-    private static Element objectField = default;
-    public static Element ObjectField {
-        get {
-            if (objectField.Equals(default(Element)))
-                objectField = new Element(Styles.ObjectField, Options.ObjectField);
-            return objectField;
-        }
-    }
-
-    private static Element infoField = default;
-    public static Element InfoField {
-        get {
-            if (infoField.Equals(default(Element)))
-                infoField = new Element(Styles.InfoField, Options.InfoField);
-            return infoField;
-        }
-    }
+    // Custom Elements Get Properties
+    #region Custom Elements Get Properties
+    public static Element ParamName => paramName.Equals(default(Element)) ? paramName = new Element(Styles.ParamName, Options.ParamNames) : paramName;
+    public static Element PrimitiveType => primitiveType.Equals(default(Element)) ? primitiveType = new Element(Styles.PrimitiveType, Options.PrimitiveType) : primitiveType;
+    public static Element NumbersField => numbersField.Equals(default(Element)) ? numbersField = new Element(Styles.NumbersField, Options.NumbersField) : numbersField;
+    public static Element StringField => stringField.Equals(default(Element)) ? stringField = new Element(Styles.StringField, Options.StringField) : stringField;
+    public static Element BoolField => boolField.Equals(default(Element)) ? boolField = new Element(Styles.BoolField, Options.BoolField) : boolField;
+    public static Element ObjectField => objectField.Equals(default(Element)) ? objectField = new Element(Styles.ObjectField, Options.ObjectField) : ObjectField;
+    public static Element InfoField => infoField.Equals(default(Element)) ? infoField = new Element(Styles.InfoField, Options.InfoField) : infoField;
+    #endregion
 
     private static class Options {
-        public static GUILayoutOption[] ParamNames = {
-              GUILayout.Width(Consts.paramNameWidth), GUILayout.ExpandWidth(false)
-        };
-
-        public static GUILayoutOption[] PrimitiveType = {
-            GUILayout.Width(Consts.primitiveTypeWidth), GUILayout.ExpandWidth(false)
-        };
-
-        public static GUILayoutOption[] NumbersField = {
-            GUILayout.Width(Consts.numbersFieldWidth), GUILayout.ExpandWidth(false)
-        };
-        public static GUILayoutOption[] StringField = {
-            GUILayout.ExpandWidth(true)
-        };
-        public static GUILayoutOption[] BoolField = {
-            GUILayout.ExpandWidth(true), GUILayout.MaxWidth(230), GUILayout.MinWidth(20)
-        };
-        public static GUILayoutOption[] ObjectField = {
-             GUILayout.ExpandWidth(true)
-        };
-        public static GUILayoutOption[] InfoField = {
-             GUILayout.ExpandWidth(true)
-        };
+        public static GUILayoutOption[] ParamNames = { GUILayout.Width(Consts.paramNameWidth), GUILayout.ExpandWidth(false) };
+        public static GUILayoutOption[] PrimitiveType = { GUILayout.Width(Consts.primitiveTypeWidth), GUILayout.ExpandWidth(false) };
+        public static GUILayoutOption[] NumbersField = { GUILayout.Width(Consts.numbersFieldWidth), GUILayout.ExpandWidth(false) };
+        public static GUILayoutOption[] StringField = { GUILayout.ExpandWidth(true) };
+        public static GUILayoutOption[] BoolField = { GUILayout.ExpandWidth(true), GUILayout.MaxWidth(230), GUILayout.MinWidth(20) };
+        public static GUILayoutOption[] ObjectField = { GUILayout.ExpandWidth(true) };
+        public static GUILayoutOption[] InfoField = { GUILayout.ExpandWidth(true) };
     }
 
     private static class Styles {
-        static GUIStyle paramName = null;
+        private static GUIStyle paramName = null, primitiveType = null, numbersField = null, stringField = null, objectField = null, info = null;
         public static GUIStyle ParamName {
             get {
                 if (paramName == null) {
@@ -132,7 +66,6 @@ public static class SerializedActions_InspectorElements {
             }
         }
 
-        static GUIStyle primitiveType = null;
         public static GUIStyle PrimitiveType {
             get {
                 if (primitiveType == null) {
@@ -147,7 +80,6 @@ public static class SerializedActions_InspectorElements {
             }
         }
 
-        static GUIStyle numbersField = null;
         public static GUIStyle NumbersField {
             get {
                 if (numbersField == null) {
@@ -161,8 +93,6 @@ public static class SerializedActions_InspectorElements {
                 return numbersField;
             }
         }
-
-        static GUIStyle stringField = null;
         public static GUIStyle StringField {
             get {
                 if (stringField == null) {
@@ -191,7 +121,7 @@ public static class SerializedActions_InspectorElements {
             }
         }
 
-        static GUIStyle objectField = null;
+
         public static GUIStyle ObjectField {
             get {
                 if (objectField == null) {
@@ -204,7 +134,6 @@ public static class SerializedActions_InspectorElements {
             }
         }
 
-        static GUIStyle info = null;
         public static GUIStyle InfoField {
             get {
                 if (info == null) {
@@ -221,20 +150,9 @@ public static class SerializedActions_InspectorElements {
         }
     }
 
-
-
-
-    private static T[] GetArrayCopy<T>(T[] array) {
-        T[] newArray = new T[array.Length];
-        array.CopyTo(newArray, 0);
-        return newArray;
-    }
-
     public static void HorizontalLine(Color color, float height, float width, Vector2 margin) {
         GUILayout.Space(margin.x);
-
         EditorGUI.DrawRect(EditorGUILayout.GetControlRect(false, height, GUILayout.MaxWidth(width)), color);
-
         GUILayout.Space(margin.y);
     }
 }

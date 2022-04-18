@@ -5,13 +5,13 @@ using UnityEditor;
 using UnityEngine;
 
 public class SerializedAction_Type_UnitTest : SerializedActions_UnitTests {
-    public static Type CheckType(SerializedAction action, List<MonoScript> monoscripts, SerializedActions_MonoBehaviourHolder implementation, List<ClassAndMethods> classesAndMethods) {
+    public static Type CheckType(SerializedActionData action, List<MonoScript> monoscripts, SerializedAction_MonoBehaviour implementation, List<ClassAndMethods> classesAndMethods) {
         string debugMessage = "\n\n-----|Checking Class Name for action with " +
-             "Method: <b>" + action.methodName + "</b>, " +
+             "Method: <b>" + action.MethodName + "</b>, " +
              "Implementation: <b>" + implementation.gameObject.name + "</b> and " +
              "Class name: <b>" + action.ClassName + "</b>";
 
-        Type resolvedType = SerializedAction.GetType(action.ClassName);
+        Type resolvedType = SerializedActionData.GetType(action.ClassName);
 
         if (resolvedType != null) {
             debugMessage += "\n Type found successfully (<b>" + resolvedType.Name + "</b>)";
@@ -40,13 +40,13 @@ public class SerializedAction_Type_UnitTest : SerializedActions_UnitTests {
         return null;
     }
     private static Type CheckAndRetrieveClass(ClassAndMethods cm, MonoScript mono, ref string debugMessage) {
-        Type t = SerializedAction.GetType(cm.TypeName);
+        Type t = SerializedActionData.GetType(cm.TypeName);
         if (t == null) {
             debugMessage += string.Format(ResolvedConflict, cm.TypeName, mono.GetClass().Name);
             Debug.Log(string.Format(ResolvedConflict, cm.TypeName, mono.GetClass().Name) + "\nDebug:\n" + debugMessage + "\n\n");
             cm.TypeName = mono.GetClass().Name;
         }
-        t = SerializedAction.GetType(cm.TypeName);
+        t = SerializedActionData.GetType(cm.TypeName);
         if (t == null) {
             debugMessage += string.Format(CouldNotFindTypeInMonoScript, cm.TypeName, mono.name);
             Debug.LogError(string.Format(CouldNotFindTypeInMonoScript, cm.TypeName, mono.name) + " </b>\n Debug:\n" + debugMessage + "\n\n");

@@ -11,75 +11,75 @@ using UnityEngine.Events;
 
 
 [System.Serializable]
-public class SerializedAction {
+public class SerializedActionData {
     public enum ActionTimeline { OnAwake, OnStart, OnEnable, OnDisable, OnPointerEnterInteraction }
     /// <summary>/// The object that triggeres the action ///</summary>
     [SerializeField]
-    public UnityEngine.Object triggerInput;
+    public UnityEngine.Object TriggerInput;
 
     [SerializeField]
     public string ClassName = "";
 
     [SerializeField]
     /// <summary>/// The name of the method of the action ///</summary>
-    public string methodName = "";
+    public string MethodName = "";
 
     /// <summary>/// The string that holds the serialized arguments ///</summary>
     [SerializeField]
-    public string serializedArray = "";
+    public string SerializedArray = "";
 
     /// <summary>/// The arguments for the method ///</summary>
-    public System.Object[] arguments;
+    public System.Object[] Arguments;
 
     /// <summary>/// The names of the arguments for debugging ///</summary>
     [SerializeField]
-    public List<string> argumentNames = new List<string>();
+    public List<string> ArgumentNames = new List<string>();
 
     [SerializeField]
-    public List<string> argumentTypesNames = new List<string>();
+    public List<string> ArgumentTypesNames = new List<string>();
     /// <summary>/// To use only internally. The arguments of type UnityEngine.Object. They are stored seperatly and seriliazation is handled by Unity. ///</summary>
     [SerializeField]
-    public UnityEngine.Object[] unityArguments;
+    public UnityEngine.Object[] UnityArguments;
 
     [SerializeField]
-    public UnityEngine.EventSystems.EventTriggerType triggerType = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
+    public UnityEngine.EventSystems.EventTriggerType TriggerType = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
     /// <summary>/// To use only internally. The arguments of type UnityEngine.Vector. They are stored seperatly and seriliazation is handled by Unity. ///</summary>
     // private Vector3[] vectorArguments;
 
     /// <summary>/// The action produced after deserializing and processing ///</summary>
-    public UnityAction action = null;
+    public UnityAction Action = null;
 
 #if UNITY_EDITOR
-    public SerializedAction(UnityEngine.Object trigger, MonoScript type, string methodName, System.Object[] args, List<string> paramNames, List<string> paramTypesNames) {
+    public SerializedActionData(UnityEngine.Object trigger, MonoScript type, string methodName, System.Object[] args, List<string> paramNames, List<string> paramTypesNames) {
 
         // Assign trigger input
-        triggerInput = trigger;
+        this.TriggerInput = trigger;
         // Assign method
-        this.methodName = methodName;
+        this.MethodName = methodName;
         // Get class
-        ClassName = type.GetClass().FullName;
+        this.ClassName = type.GetClass().FullName;
 
         // Get Arguments
-        arguments = new System.Object[args.Length];
-        unityArguments = new UnityEngine.Object[args.Length];
+        this.Arguments = new System.Object[args.Length];
+        this.UnityArguments = new UnityEngine.Object[args.Length];
         // Filter arguments between objects that derive from System.Object and objects that derive from UnityEngine.Object
         for (int i = 0; i < args.Length; i++) {
             if (args[i] != null && args[i].GetType().IsSubclassOf(typeof(UnityEngine.Object))) {
-                unityArguments[i] = args[i] as UnityEngine.Object;
-                arguments[i] = null;
+                this.UnityArguments[i] = args[i] as UnityEngine.Object;
+                this.Arguments[i] = null;
             }
             else {
-                unityArguments[i] = null;
-                arguments[i] = args[i] as System.Object;
+                this.UnityArguments[i] = null;
+                this.Arguments[i] = args[i] as System.Object;
             }
             // Assign argument names
-            argumentNames.Add(paramNames[i]);
+            this.ArgumentNames.Add(paramNames[i]);
             // Assign argument type names
-            argumentTypesNames.Add(paramTypesNames[i]);
+            this.ArgumentTypesNames.Add(paramTypesNames[i]);
 
         }
         // Serialise arguments to XML string
-        serializedArray = XmlSerializeToString(arguments);
+        this.SerializedArray = XmlSerializeToString(Arguments);
         #region Debug
 #if UNITY_EDITOR && DEBUG_SerializedActions
         DebugInstanceConstruction(trigger, type, methodName, args, paramNames, argumentTypesNames);
@@ -99,15 +99,15 @@ public class SerializedAction {
 #endif
         #endregion
 
-        arguments = XmlDeserializeFromString(serializedArray);
-        if (arguments == null) {
-            arguments = new System.Object[0];
+        Arguments = XmlDeserializeFromString(SerializedArray);
+        if (this.Arguments == null) {
+            this.Arguments = new System.Object[0];
         }
 
         Type type = GetType(ClassName);
-        MethodInfo method = type.GetMethod(methodName);
-        action = () => method.Invoke(triggerInput, arguments);
-        return action;
+        MethodInfo method = type.GetMethod(MethodName);
+        this.Action = () => method.Invoke(TriggerInput, Arguments);
+        return Action;
     }
 
 
@@ -137,70 +137,50 @@ public class SerializedAction {
             using (System.IO.TextReader reader = new System.IO.StringReader(objectData)) {
                 result = serializer.Deserialize(reader) as System.Object[];
             }
-            if (unityArguments.Length != result.Length) {
-                Debug.LogError("Not eqaul");
+            if (UnityArguments.Length != result.Length)
                 return null;
-            }
             if (result != null) {
                 for (int i = 0; i < result.Length; i++) {
-                    if (unityArguments[i] != null)
-                        result[i] = unityArguments[i];
+                    if (UnityArguments[i] != null)
+                        result[i] = UnityArguments[i];
                 }
             }
             else {
-                result = new System.Object[unityArguments.Length];
+                result = new System.Object[UnityArguments.Length];
                 for (int i = 0; i < result.Length; i++) {
-                    result[i] = unityArguments[i];
+                    result[i] = UnityArguments[i];
                 }
             }
         }
         else {
-            result = new System.Object[unityArguments.Length];
-            for (int i = 0; i < result.Length; i++) {
-                result[i] = unityArguments[i];
-            }
+            result = new System.Object[UnityArguments.Length];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = UnityArguments[i];
         }
-
         return result;
     }
 
     public static Type GetType(string typeName) {
         try {
             Type type = Type.GetType(typeName);
-
             if (type == null)
-                type = typeof(UnityEngine.GameObject).Module.GetTypes().FirstOrDefault(t => {
-                    //Debug.Log(t.Name);
-                    return t.Name == typeName;
-                });
+                type = typeof(UnityEngine.GameObject).Module.GetTypes().FirstOrDefault(t => t.Name == typeName);
             else
                 return type;
             if (type == null)
-                type = typeof(UnityEngine.Component).Module.GetTypes().FirstOrDefault(t => {
-                    //Debug.Log(t.Name);
-                    return t.Name == typeName;
-                });
+                type = typeof(UnityEngine.Component).Module.GetTypes().FirstOrDefault(t => t.Name == typeName);
             else
                 return type;
             if (type == null)
-                type = typeof(UnityEngine.UI.Selectable).Module.GetTypes().FirstOrDefault(t => {
-                    //Debug.Log(t.Name);
-                    return t.Name == typeName;
-                });
+                type = typeof(UnityEngine.UI.Selectable).Module.GetTypes().FirstOrDefault(t => t.Name == typeName);
             else
                 return type;
             if (type == null)
-                type = typeof(UnityEngine.Object).Assembly.GetTypes().FirstOrDefault(t => {
-                    //Debug.Log(t.Name);
-                    return t.Name == typeName;
-                });
+                type = typeof(UnityEngine.Object).Assembly.GetTypes().FirstOrDefault(t => t.Name == typeName);
             else
                 return type;
             if (type == null)
-                type = typeof(CanvasGroup).Assembly.GetTypes().FirstOrDefault(t => {
-                    //Debug.Log(t.Name);
-                    return t.Name == typeName;
-                });
+                type = typeof(CanvasGroup).Assembly.GetTypes().FirstOrDefault(t => t.Name == typeName);
             else
                 return type;
             if (type == null)
