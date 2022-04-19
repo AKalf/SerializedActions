@@ -11,7 +11,7 @@ using UnityEngine.Events;
 
 
 [System.Serializable]
-public class SerializedActionData {
+public class SerializedAction_Instance {
     public enum ActionTimeline { OnAwake, OnStart, OnEnable, OnDisable, OnPointerEnterInteraction }
     /// <summary>/// The object that triggeres the action ///</summary>
     [SerializeField]
@@ -50,7 +50,7 @@ public class SerializedActionData {
     public UnityAction Action = null;
 
 #if UNITY_EDITOR
-    public SerializedActionData(UnityEngine.Object trigger, MonoScript type, string methodName, System.Object[] args, List<string> paramNames, List<string> paramTypesNames) {
+    public SerializedAction_Instance(UnityEngine.Object trigger, MonoScript type, string methodName, System.Object[] args, List<string> paramNames, List<string> paramTypesNames) {
 
         // Assign trigger input
         this.TriggerInput = trigger;
@@ -133,24 +133,17 @@ public class SerializedActionData {
         System.Object[] result = null;
         if (string.IsNullOrEmpty(objectData) == false) {
             var serializer = new System.Xml.Serialization.XmlSerializer(typeof(System.Object[]));
-
             using (System.IO.TextReader reader = new System.IO.StringReader(objectData)) {
                 result = serializer.Deserialize(reader) as System.Object[];
             }
             if (UnityArguments.Length != result.Length)
                 return null;
-            if (result != null) {
-                for (int i = 0; i < result.Length; i++) {
-                    if (UnityArguments[i] != null)
-                        result[i] = UnityArguments[i];
-                }
-            }
-            else {
+            if (result == null)
                 result = new System.Object[UnityArguments.Length];
-                for (int i = 0; i < result.Length; i++) {
-                    result[i] = UnityArguments[i];
-                }
-            }
+            if (result == null)
+                result = new System.Object[UnityArguments.Length];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = UnityArguments[i];
         }
         else {
             result = new System.Object[UnityArguments.Length];

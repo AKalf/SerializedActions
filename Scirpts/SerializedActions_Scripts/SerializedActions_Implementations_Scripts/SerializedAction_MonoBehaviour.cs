@@ -9,12 +9,12 @@ using UnityEngine.EventSystems;
 /// <summary>Derive your class from this in order to make it compatible with SerializedActions Inspector </summary>
 public class SerializedAction_MonoBehaviour : MonoBehaviour {
     [SerializeField]
-    public List<SerializedActionData>
-        OnAwakeActions = new List<SerializedActionData>(),
-        OnStartActions = new List<SerializedActionData>(),
-        OnEnableActions = new List<SerializedActionData>(),
-        OnDisableActions = new List<SerializedActionData>(),
-        OnPointEnterActions = new List<SerializedActionData>();
+    public List<SerializedAction_Instance>
+        OnAwakeActions = new List<SerializedAction_Instance>(),
+        OnStartActions = new List<SerializedAction_Instance>(),
+        OnEnableActions = new List<SerializedAction_Instance>(),
+        OnDisableActions = new List<SerializedAction_Instance>(),
+        OnPointEnterActions = new List<SerializedAction_Instance>();
 
     private string debugMessage;
 
@@ -30,7 +30,7 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
 
     protected void AssignPointerEnterActionsToGameObjects() {
         // Assign SerialisedActions to Selectables
-        foreach (SerializedActionData action in OnPointEnterActions) {
+        foreach (SerializedAction_Instance action in OnPointEnterActions) {
             if (action.TriggerInput.GetType().IsSubclassOf(typeof(Selectable)))
                 SetSelectableTrigger(action);
             else
@@ -55,9 +55,9 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
             AssignPointerEnterActionsToGameObjects();
     }
 
-    private void InvokeSerialisedAction(List<SerializedActionData> actions, string timeline) {
+    private void InvokeSerialisedAction(List<SerializedAction_Instance> actions, string timeline) {
         if (actions != null && actions.Count > 0) {
-            foreach (SerializedActionData action in actions) {
+            foreach (SerializedAction_Instance action in actions) {
 #if UNITY_EDITOR
                 Debug_ActionDeserialisation(action, timeline);
 #endif
@@ -67,7 +67,7 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
         else
             actions = null;
     }
-    private void SetGameObjectTrigger(SerializedActionData action) {
+    private void SetGameObjectTrigger(SerializedAction_Instance action) {
         GameObject triggerAsG = null;
 #if UNITY_EDITOR
         AddDebug_ActionTrigger(action, triggerAsG);
@@ -96,7 +96,7 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
     }
 
 
-    private void SetSelectableTrigger(SerializedActionData action) {
+    private void SetSelectableTrigger(SerializedAction_Instance action) {
         Selectable input = action.TriggerInput as Selectable;
 #if UNITY_EDITOR
         AddDebug_ActionTrigger(action, input);
@@ -170,7 +170,7 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
     //  Debug Functions
     #region Debug Functions
 #if UNITY_EDITOR
-    private void Debug_ActionDeserialisation(SerializedActionData action, string timeline) {
+    private void Debug_ActionDeserialisation(SerializedAction_Instance action, string timeline) {
         debugMessage += "Starting invokation of <b>" + timeline + "<b>\n";
         try {
             debugMessage += "Deserialized action: " + action.MethodName + '\n';
@@ -213,7 +213,7 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
         debugMessage += newMessage;
         return newMessage;
     }
-    private void AddDebug_ActionTrigger(SerializedActionData action, UnityEngine.Object input) {
+    private void AddDebug_ActionTrigger(SerializedAction_Instance action, UnityEngine.Object input) {
         if (input == null)
             Debug.LogError("Action has <NULL> trigger! Instance with error: " + this.name + "\n Method: " + action.MethodName + ", Script with method: " + action.ClassName);
         debugMessage += "Deserialized method name: " + action.MethodName + ", with trigger: " + action.TriggerInput.name + '\n';
