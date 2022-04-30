@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +6,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 /// <summary>Derive your class from this in order to make it compatible with SerializedActions Inspector </summary>
-public class SerializedAction_MonoBehaviour : MonoBehaviour {
+public class SerializedActionsManager : MonoBehaviour {
     [SerializeField]
     public List<SerializedAction_Instance>
         OnAwakeActions = new List<SerializedAction_Instance>(),
@@ -85,7 +84,12 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
                 trigger = triggerAsG.gameObject.AddComponent<EventTrigger>();
             EventTrigger.Entry entry = new EventTrigger.Entry();
             entry.eventID = action.TriggerType;
-            entry.callback.AddListener(data => { if (action.Action == null) action.GetAction("Selectables").Invoke(); else action.Action.Invoke(); });
+            entry.callback.AddListener(data => {
+                if (action.Action == null)
+                    action.GetAction("Selectables").Invoke();
+                else
+                    action.Action.Invoke();
+            });
             trigger.triggers.Add(entry);
 #if UNITY_EDITOR
         }
@@ -102,42 +106,20 @@ public class SerializedAction_MonoBehaviour : MonoBehaviour {
         AddDebug_ActionTrigger(action, input);
         try {
 #endif
+            UnityAction unityAction = action.Action ?? action.GetAction("Selectables").Invoke;
             // Button 
-            #region Button
-            if (input.GetType() == typeof(Button)) {
-                if (action.Action == null)
-                    ((Button)input).onClick.AddListener(action.GetAction("Selectables").Invoke);
-                else
-                    ((Button)input).onClick.AddListener(action.Action);
-            }
-            #endregion
+            if (input.GetType() == typeof(Button))
+                ((Button)input).onClick.AddListener(unityAction);
             // Toggle
-            #region Toggle
-            else if (input.GetType() == typeof(Toggle)) {
-                if (action.Action == null)
-                    ((Toggle)input).onValueChanged.AddListener(value => action.GetAction("Selectables").Invoke());
-                else
-                    ((Toggle)input).onValueChanged.AddListener(value => action.Action.Invoke());
-            }
-            #endregion
+            else if (input.GetType() == typeof(Toggle))
+                ((Toggle)input).onValueChanged.AddListener(value => unityAction.Invoke());
             // Dropdown
-            #region Dropdown
-            else if (input.GetType() == typeof(Dropdown)) {
-                if (action.Action == null)
-                    ((Dropdown)input).onValueChanged.AddListener(value => action.GetAction("Selectables").Invoke());
-                else
-                    ((Dropdown)input).onValueChanged.AddListener(value => action.Action.Invoke());
-            }
-            #endregion
+            else if (input.GetType() == typeof(Dropdown))
+                ((Dropdown)input).onValueChanged.AddListener(value => unityAction.Invoke());
             // Input Field
-            #region Input Field
-            else if (input.GetType() == typeof(InputField)) {
-                if (action.Action == null)
-                    ((InputField)input).onEndEdit.AddListener(value => action.GetAction("Selectables").Invoke());
-                else
-                    ((InputField)input).onEndEdit.AddListener(value => action.Action.Invoke());
-            }
-            #endregion
+            else if (input.GetType() == typeof(InputField))
+                ((InputField)input).onEndEdit.AddListener(value => unityAction.Invoke());
+
 #if UNITY_EDITOR
         }
         catch (Exception ex) {

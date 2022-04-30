@@ -11,18 +11,20 @@ namespace SerializedActions.Editors {
 
         private bool showImplementations = false;
         private bool[] showImplementation = null;
-        private Dictionary<SerializedAction_MonoBehaviour, bool[]> actions = new Dictionary<SerializedAction_MonoBehaviour, bool[]>();
+        private Dictionary<SerializedActionsManager, bool[]> actions = new Dictionary<SerializedActionsManager, bool[]>();
         private const int TIMELINES_COUNT = 5;
         public override void OnInspectorGUI() {
             UnitTestsDataContainer targetInstance = (UnitTestsDataContainer)target;
             SerializedObject objInstance = new SerializedObject(targetInstance);
+            if (targetInstance == null || objInstance == null)
+                return;
             objInstance.Update();
             base.OnInspectorGUI();
             showImplementations = EditorGUILayout.Foldout(showImplementations, "Show implementations");
             if (showImplementations) {
                 if (showImplementation == null) { // Initialise
                     showImplementation = new bool[targetInstance.implementationsInProject.Count];
-                    foreach (SerializedAction_MonoBehaviour imple in targetInstance.implementationsInProject)
+                    foreach (SerializedActionsManager imple in targetInstance.implementationsInProject)
                         actions.Add(imple, new bool[TIMELINES_COUNT]);
                 }
                 for (int i = 0; i < showImplementation.Length; i++) {
@@ -40,17 +42,17 @@ namespace SerializedActions.Editors {
                 targetInstance.classesAndMethods.Clear();
                 UnitTestsDataContainer.Instance().monoscripts.Clear();
             }
-            EditorGUILayout.LabelField("Total registered types by names: " + UnitTestsDataContainer.Instance().monoscripts.Count);
-            foreach (MonoScript script in UnitTestsDataContainer.Instance().monoscripts)
+            EditorGUILayout.LabelField("Total registered types by names: " + targetInstance.monoscripts.Count);
+            foreach (MonoScript script in targetInstance.monoscripts)
                 EditorGUILayout.LabelField(script.GetClass().Name);
 
         }
-        private void ShowImplementationLists(ref bool foldout, SerializedAction_MonoBehaviour implementation) {
+        private void ShowImplementationLists(ref bool foldout, SerializedActionsManager implementation) {
             GUIStyle s = new GUIStyle(EditorStyles.foldout);
             s.margin.left = 20;
             foldout = EditorGUILayout.Foldout(foldout, implementation.name, s);
             if (foldout) {
-                SerializedAction_MonoBehaviour imple = implementation;
+                SerializedActionsManager imple = implementation;
                 ShowList(imple.OnAwakeActions, ref actions[imple][0], "On Awake");
                 ShowList(imple.OnStartActions, ref actions[imple][1], "On Start");
                 ShowList(imple.OnEnableActions, ref actions[imple][2], "On Enable");

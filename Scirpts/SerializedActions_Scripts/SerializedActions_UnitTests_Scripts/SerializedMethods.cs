@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SerializedActions.UnitTests {
     public class SerializedMethods : UnitTestsDataContainer {
-        public static bool CheckMethods(SerializedAction_Instance action, Type type, SerializedAction_MonoBehaviour implementation, List<MethodsOfType> classAndMethods, ref string debugMessage) {
+        public static bool CheckMethods(SerializedAction_Instance action, Type type, SerializedActionsManager implementation, List<MethodsOfType> classAndMethods, ref string debugMessage) {
             debugMessage = "\n-----|Checking method: " + action.MethodName.Bold() + " of class: " + type.Name.Bold().NewLine();
             bool allGood = true;
             MethodsOfType cm = GetStructByType(type.Name, classAndMethods);

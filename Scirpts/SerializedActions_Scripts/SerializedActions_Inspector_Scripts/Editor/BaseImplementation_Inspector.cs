@@ -7,7 +7,7 @@ using UnityEngine;
 using ActionTimeline = SerializedAction_Instance.ActionTimeline;
 
 namespace SerializedActions.Editors {
-    [CustomEditor(typeof(SerializedAction_MonoBehaviour), true)]
+    [CustomEditor(typeof(SerializedActionsManager), true)]
     public class BaseImplementation_Inspector : Editor {
 
         public ActionTimeline selectedTimeline = ActionTimeline.OnPointerEnterInteraction;
@@ -20,7 +20,7 @@ namespace SerializedActions.Editors {
                 base.DrawDefaultInspector();
             EditorGUILayout.Space();
 
-            SerializedAction_MonoBehaviour targetInstance = (SerializedAction_MonoBehaviour)target;
+            SerializedActionsManager targetInstance = (SerializedActionsManager)target;
             SerializedObject objInstance = new SerializedObject(target);
             objInstance.Update();
 
@@ -41,7 +41,7 @@ namespace SerializedActions.Editors {
         }
 
         /// <summary>Draws the inspector of a SerializedAction data holder</summary>
-        public void DrawInspector(SerializedAction_MonoBehaviour targetInstance, SerializedObject serializedObj) {
+        public void DrawInspector(SerializedActionsManager targetInstance, SerializedObject serializedObj) {
             selectedTimeline = (ActionTimeline)EditorGUILayout.EnumPopup(selectedTimeline);
             List<SerializedAction_Instance> actionsToShow = null;
             switch (selectedTimeline) {
@@ -180,7 +180,7 @@ namespace SerializedActions.Editors {
                     EditorGUILayout.BeginHorizontal();
                     // Check action for erros -------------------------------------------------------------------------------------------------------
                     if (GUILayout.Button("Check action", EditorStyles.miniButtonRight, GUILayout.Width(100))) {
-                        UnitTests.SerializedParametersTest.Instance().CheckSingleAction(action, target as SerializedAction_MonoBehaviour);
+                        UnitTests.SerializedParametersTest.Instance().CheckSingleAction(action, target as SerializedActionsManager);
                         EditorUtility.SetDirty(objRef.targetObject);
                     }
                     GUILayout.FlexibleSpace();

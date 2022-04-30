@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace SerializedActions.UnitTests {
     public class SerializedTypeTest : UnitTestsDataContainer {
-        public static Type CheckType(SerializedAction_Instance action, List<MonoScript> monoscripts, SerializedAction_MonoBehaviour implementation, List<MethodsOfType> classesAndMethods) {
+        public static Type CheckType(SerializedAction_Instance action, List<MonoScript> monoscripts, SerializedActionsManager implementation, List<MethodsOfType> classesAndMethods) {
             string debugMessage = "\n\n-----|Checking Class Name for action with " +
                 "Method: " + action.MethodName.Bold() + ", " +
                 "Implementation: " + implementation.gameObject.name.Bold() + ", " +

@@ -5,8 +5,14 @@ using UnityEngine;
 
 namespace SerializedActions.Editors {
     public static class InspectorElements {
-        private static Element paramName = default, primitiveType = default, numbersField = default, stringField = default, boolField = default,
-            objectField = default, infoField = default;
+        private static Element
+            paramName = new Element(Styles.ParamName, Options.ParamNames),
+            primitiveType = default,
+            numbersField = default,
+            stringField = default,
+            boolField = default,
+            objectField = new Element(Styles.ObjectField, Options.ObjectField),
+            infoField = default;
         public static class Consts {
             public const int paramNameWidth = 150;
             public const int primitiveTypeWidth = 40;
@@ -30,12 +36,12 @@ namespace SerializedActions.Editors {
         }
         // Custom Elements Get Properties
         #region Custom Elements Get Properties
-        public static Element ParamName => paramName.Equals(default(Element)) ? paramName = new Element(Styles.ParamName, Options.ParamNames) : paramName;
+        public static Element ParamName => paramName;
         public static Element PrimitiveType => primitiveType.Equals(default(Element)) ? primitiveType = new Element(Styles.PrimitiveType, Options.PrimitiveType) : primitiveType;
         public static Element NumbersField => numbersField.Equals(default(Element)) ? numbersField = new Element(Styles.NumbersField, Options.NumbersField) : numbersField;
         public static Element StringField => stringField.Equals(default(Element)) ? stringField = new Element(Styles.StringField, Options.StringField) : stringField;
         public static Element BoolField => boolField.Equals(default(Element)) ? boolField = new Element(Styles.BoolField, Options.BoolField) : boolField;
-        public static Element ObjectField => objectField.Equals(default(Element)) ? objectField = new Element(Styles.ObjectField, Options.ObjectField) : ObjectField;
+        public static Element ObjectField => objectField;
         public static Element InfoField => infoField.Equals(default(Element)) ? infoField = new Element(Styles.InfoField, Options.InfoField) : infoField;
         #endregion
 

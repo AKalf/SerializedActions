@@ -8,12 +8,12 @@ namespace SerializedActions.UnitTests {
     public class SerializedParametersTest : UnitTestsDataContainer {
         private static string debugMessage = "";
         private static SerializedAction_Instance action = null;
-        private static SerializedAction_MonoBehaviour implementation = null;
+        private static SerializedActionsManager implementation = null;
         private static MethodInfo method = null;
         private static System.Object[] deserialized = null;
         private static ParameterInfo[] actual = null;
 
-        public static bool CheckMethodParameters(MethodInfo methodInfo, SerializedAction_Instance serializedAction, SerializedAction_MonoBehaviour imple) {
+        public static bool CheckMethodParameters(MethodInfo methodInfo, SerializedAction_Instance serializedAction, SerializedActionsManager imple) {
 
             action = serializedAction;
             implementation = imple;

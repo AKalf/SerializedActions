@@ -13,9 +13,9 @@ namespace SerializedActions.Editors {
         /// <summary>The timeline to trigger this action </summary>
         private ActionTimeline selectedTimeline = ActionTimeline.OnPointerEnterInteraction;
         private string debugMessage = "";
-        private GUIStyle myStyle = new GUIStyle();
-        private SerializedAction_MonoBehaviour targetInstance = null;
-
+        private GUIStyle richTextStyle = new GUIStyle();
+        private SerializedActionsManager targetInstance = null;
+        private static SerializedActions_NewActionEditorWindow window = null;
         /// <summary>The UI element which will trig the action </summary>
         private UnityEngine.Object triggerObject = null;
         /// <summary>A helping field that holds the object the user selected to retrieve methods from</summary>
@@ -46,16 +46,20 @@ namespace SerializedActions.Editors {
 
         [MenuItem("Window/Serialized Actions/New Action")]
         public static void ShowWindow() {
-            EditorWindow.GetWindow(typeof(SerializedActions_NewActionEditorWindow));
+            window = EditorWindow.GetWindow(typeof(SerializedActions_NewActionEditorWindow)) as SerializedActions_NewActionEditorWindow;
+            window.richTextStyle.richText = true;
+            window.richTextStyle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
         }
-        public static void ShowWindow(SerializedAction_MonoBehaviour target) {
+        public static void ShowWindow(SerializedActionsManager target) {
             SerializedActions_NewActionEditorWindow window = EditorWindow.GetWindow(typeof(SerializedActions_NewActionEditorWindow)) as SerializedActions_NewActionEditorWindow;
             window.targetInstance = target;
+            window.richTextStyle.richText = true;
+            window.richTextStyle.normal.textColor = EditorGUIUtility.isProSkin ? Color.white : Color.black;
         }
 
         void OnGUI() {
-            targetInstance = Drawings.UnityObjectField<SerializedAction_MonoBehaviour>(targetInstance, targetInstance.GetType(), "Target behaviour", true, false);
             if (targetInstance != null) {
+                targetInstance = Drawings.UnityObjectField<SerializedActionsManager>(targetInstance, targetInstance.GetType(), "Target behaviour", true, false);
                 // Get invoke time
                 selectedTimeline = (ActionTimeline)EditorGUILayout.EnumPopup(selectedTimeline);
                 debugMessage = "Selected timeline for new action: " + selectedTimeline.Bold();
@@ -84,14 +88,14 @@ namespace SerializedActions.Editors {
                         break;
                 }
             }
+            else
+                targetInstance = Drawings.UnityObjectField<SerializedActionsManager>(null, typeof(UnityEngine.Object), "Target behaviour", true, false);
         }
 
         /// <summary>Draw the field for the trigger object </summary>
         /// <returns>Returns true if the field value wasnt null</returns>
         private bool SelectNewActionTrigger() {
-            myStyle.fontSize = 15;
-            myStyle.fontStyle = FontStyle.Bold;
-            EditorGUILayout.LabelField("New action", myStyle, GUILayout.Height(20));
+            EditorGUILayout.LabelField("New action".Bold(), richTextStyle, GUILayout.Height(20));
             // Set the UI element that will trigger the action
             triggerObject = Drawings.UnityObjectField<UnityEngine.Object>(triggerObject, typeof(UnityEngine.Object), "New Input: ");
             if (triggerObject != null) {
@@ -123,7 +127,7 @@ namespace SerializedActions.Editors {
                 debugMessage += "Type selected: " + type?.Bold().NewLine();
             }
             if (type != null) {
-                GUILayout.TextArea("Type selected: " + type?.Bold().NewLine());
+                GUILayout.TextArea("Type selected: " + type?.Bold().NewLine(), richTextStyle);
                 GUILayout.Space(25);
                 return true;
             }
@@ -216,15 +220,17 @@ namespace SerializedActions.Editors {
                 EditorUtility.SetDirty(targetInstance);
                 try {
                     debugMessage += "Added new action with".NewLine() +
-                        "Timeline: " + selectedTimeline.Bold().NewLine() +
-                        "Trigger: " + action.TriggerInput.name.Bold().NewLine() +
-                        "Type: " + action.ClassName.Bold() +
-                        "Method: " + action.MethodName.Bold().NewLine() +
-                        "Total parameters: " + action.Arguments.Length.Bold().NewLine();
-                    for (int i = 0; i < action.Arguments.Length; i++) {
-                        debugMessage += "Name: " + action.ArgumentNames[i].Bold().Comma() +
-                        "Type: " + action.ArgumentTypesNames[i].Comma() +
-                        "Object: " + action.Arguments[i].Bold();
+                        "Timeline: " + selectedTimeline.ToString().Bold().NewLine() +
+                        "Trigger: " + (action.TriggerInput?.name).ToString().Bold().NewLine() +
+                        "Type: " + action.ClassName.ToString().Bold() +
+                        "Method: " + action.MethodName.ToString().Bold().NewLine() +
+                        "Total parameters: " + (action.Arguments?.Length).ToString().Bold().NewLine();
+                    if (action.Arguments != null && action.ArgumentNames != null) {
+                        for (int i = 0; i < action.Arguments.Length; i++) {
+                            debugMessage += "Name: " + action.ArgumentNames[i]?.ToString().Bold().Comma() +
+                            "Type: " + action.ArgumentTypesNames[i]?.ToString().Comma() +
+                            "Object: " + action.Arguments[i]?.ToString().Bold();
+                        }
                     }
                     Debug.Log(debugMessage.NewLine(2));
                     debugMessage = "";
