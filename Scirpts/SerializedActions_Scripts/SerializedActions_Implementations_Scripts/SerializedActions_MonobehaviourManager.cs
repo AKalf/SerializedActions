@@ -6,14 +6,14 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
 /// <summary>Derive your class from this in order to make it compatible with SerializedActions Inspector </summary>
-public class SerializedActionsManager : MonoBehaviour {
+public class SerializedActions_MonobehaviourManager : MonoBehaviour {
     [SerializeField]
-    public List<SerializedAction_Instance>
-        OnAwakeActions = new List<SerializedAction_Instance>(),
-        OnStartActions = new List<SerializedAction_Instance>(),
-        OnEnableActions = new List<SerializedAction_Instance>(),
-        OnDisableActions = new List<SerializedAction_Instance>(),
-        OnPointEnterActions = new List<SerializedAction_Instance>();
+    public List<SerializedAction_Container>
+        OnAwakeActions = new List<SerializedAction_Container>(),
+        OnStartActions = new List<SerializedAction_Container>(),
+        OnEnableActions = new List<SerializedAction_Container>(),
+        OnDisableActions = new List<SerializedAction_Container>(),
+        OnInteractionActions = new List<SerializedAction_Container>();
 
     private string debugMessage;
 
@@ -29,7 +29,7 @@ public class SerializedActionsManager : MonoBehaviour {
 
     protected void AssignPointerEnterActionsToGameObjects() {
         // Assign SerialisedActions to Selectables
-        foreach (SerializedAction_Instance action in OnPointEnterActions) {
+        foreach (SerializedAction_Container action in OnInteractionActions) {
             if (action.TriggerInput.GetType().IsSubclassOf(typeof(Selectable)))
                 SetSelectableTrigger(action);
             else
@@ -50,13 +50,13 @@ public class SerializedActionsManager : MonoBehaviour {
         // Invoke OnStart serialised actions
         if (OnStartActions != null && OnStartActions.Count > 0)
             InvokeSerialisedAction(OnStartActions, "OnStart");
-        if (OnPointEnterActions != null && OnPointEnterActions.Count > 0)
+        if (OnInteractionActions != null && OnInteractionActions.Count > 0)
             AssignPointerEnterActionsToGameObjects();
     }
 
-    private void InvokeSerialisedAction(List<SerializedAction_Instance> actions, string timeline) {
+    private void InvokeSerialisedAction(List<SerializedAction_Container> actions, string timeline) {
         if (actions != null && actions.Count > 0) {
-            foreach (SerializedAction_Instance action in actions) {
+            foreach (SerializedAction_Container action in actions) {
 #if UNITY_EDITOR
                 Debug_ActionDeserialisation(action, timeline);
 #endif
@@ -66,7 +66,7 @@ public class SerializedActionsManager : MonoBehaviour {
         else
             actions = null;
     }
-    private void SetGameObjectTrigger(SerializedAction_Instance action) {
+    private void SetGameObjectTrigger(SerializedAction_Container action) {
         GameObject triggerAsG = null;
 #if UNITY_EDITOR
         AddDebug_ActionTrigger(action, triggerAsG);
@@ -100,7 +100,7 @@ public class SerializedActionsManager : MonoBehaviour {
     }
 
 
-    private void SetSelectableTrigger(SerializedAction_Instance action) {
+    private void SetSelectableTrigger(SerializedAction_Container action) {
         Selectable input = action.TriggerInput as Selectable;
 #if UNITY_EDITOR
         AddDebug_ActionTrigger(action, input);
@@ -152,14 +152,12 @@ public class SerializedActionsManager : MonoBehaviour {
     //  Debug Functions
     #region Debug Functions
 #if UNITY_EDITOR
-    private void Debug_ActionDeserialisation(SerializedAction_Instance action, string timeline) {
+    private void Debug_ActionDeserialisation(SerializedAction_Container action, string timeline) {
         debugMessage += "Starting invokation of <b>" + timeline + "<b>\n";
         try {
             debugMessage += "Deserialized action: " + action.MethodName + '\n';
-            if (action.UnityArguments != null)
-                Debug_ActionParameters(action.UnityArguments, action.ArgumentNames, true);
-            if (action.Arguments != null)
-                Debug_ActionParameters(action.Arguments, action.ArgumentNames, false);
+            if (action.Parameters != null)
+                Debug_ActionParameters(action.Parameters);
             action.GetAction(timeline).Invoke();
             debugMessage += "Deserialisation has finished successfully for action with method: " + action.MethodName + '\n';
         }
@@ -178,10 +176,10 @@ public class SerializedActionsManager : MonoBehaviour {
                 this.gameObject);
         }
     }
-    private void Debug_ActionParameters<T>(T[] arguments, List<string> parameterNames, bool isUnityArgument) {
-        debugMessage += "Total arguments deriving from " + (isUnityArgument ? nameof(UnityEngine.Object) : nameof(System.Object)) + ": " + arguments.Length + '\n';
-        for (int i = 0; i < arguments.Length; i++) {
-            string paramName = GetDebug_ParameterName(i, arguments, parameterNames);
+    private void Debug_ActionParameters(List<SerializedActions.SerializedActions_SerializedParameters> arguments) {
+        debugMessage += "Total arguments " + arguments.Count + '\n';
+        for (int i = 0; i < arguments.Count; i++) {
+            string paramName = GetDebug_ParameterName(i, arguments);
             AddDebug_Parameter(paramName, arguments[i], true);
         }
 
@@ -195,19 +193,17 @@ public class SerializedActionsManager : MonoBehaviour {
         debugMessage += newMessage;
         return newMessage;
     }
-    private void AddDebug_ActionTrigger(SerializedAction_Instance action, UnityEngine.Object input) {
+    private void AddDebug_ActionTrigger(SerializedAction_Container action, UnityEngine.Object input) {
         if (input == null)
             Debug.LogError("Action has <NULL> trigger! Instance with error: " + this.name + "\n Method: " + action.MethodName + ", Script with method: " + action.ClassName);
         debugMessage += "Deserialized method name: " + action.MethodName + ", with trigger: " + action.TriggerInput.name + '\n';
-        if (action.UnityArguments != null)
-            Debug_ActionParameters(action.UnityArguments, action.ArgumentNames, true);
-        if (action.Arguments != null)
-            Debug_ActionParameters(action.Arguments, action.ArgumentNames, false);
+        if (action.Parameters != null)
+            Debug_ActionParameters(action.Parameters);
     }
-    private string GetDebug_ParameterName<T>(int currentArgumentIndex, T[] arguments, List<string> parmatersNames) {
+    private string GetDebug_ParameterName(int currentArgumentIndex, List<SerializedActions.SerializedActions_SerializedParameters> arguments) {
         string paramName = "";
-        if (currentArgumentIndex < parmatersNames.Count && string.IsNullOrEmpty(parmatersNames[currentArgumentIndex]) == false)
-            paramName = parmatersNames[currentArgumentIndex];
+        if (currentArgumentIndex < arguments.Count && string.IsNullOrEmpty(arguments[currentArgumentIndex].ParameterName) == false)
+            paramName = arguments[currentArgumentIndex].ParameterName;
         else {
             if (arguments[currentArgumentIndex] == null)
                 paramName = "<b><color=red>\nCould not retrieve parameter name!</color></b>";

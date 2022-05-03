@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿#if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEngine;
+using SerializedActions.Extensions;
 using Elements = SerializedActions.Editors.InspectorElements;
 
+
 namespace SerializedActions.Editors {
-    public static class Drawings {
+    public static class SerializedActions_EditorDrawings {
         /// <summary>Draw a field for an object of primitive type (int, float, bool, string) </summary>
         /// <param name="obj">The actual object</param> 
         /// <param name="type">The type of the object (int, float, bool, string are supported)</param>
         /// <param name="paramName">The name of the field</param>
         /// <returns>Returns the updated value of the field</returns>
-        public static System.Object PrimitiveField(
+        private static System.Object PrimitiveField(
             // Method parameters
             System.Object obj,
             System.Type type,
@@ -24,7 +25,7 @@ namespace SerializedActions.Editors {
                 EditorGUILayout.LabelField("Int: ", Elements.PrimitiveType.Style, Elements.PrimitiveType.Options);
                 EditorGUILayout.LabelField(paramName, Elements.ParamName.Style, Elements.ParamName.Options);
                 int value = 0;
-                value = EditorGUILayout.IntField(obj != null ? (System.Int32)obj : value, Elements.NumbersField.Style, Elements.NumbersField.Options);
+                value = EditorGUILayout.IntField(obj != null ? (int)obj : value, Elements.NumbersField.Style, Elements.NumbersField.Options);
                 EditorGUILayout.EndHorizontal();
                 return value;
             }
@@ -42,7 +43,7 @@ namespace SerializedActions.Editors {
                 EditorGUILayout.LabelField("String: ", Elements.PrimitiveType.Style, Elements.PrimitiveType.Options);
                 EditorGUILayout.LabelField(paramName, Elements.ParamName.Style, Elements.ParamName.Options);
                 string value = "";
-                value = EditorGUILayout.TextField(obj != null ? (System.String)obj : value, Elements.StringField.Style, Elements.StringField.Options);
+                value = EditorGUILayout.TextField(obj != null ? (string)obj : value, Elements.StringField.Style, Elements.StringField.Options);
                 EditorGUILayout.EndHorizontal();
                 return value;
             }
@@ -50,7 +51,7 @@ namespace SerializedActions.Editors {
                 bool value = false;
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.LabelField(paramName, Elements.BoolField.Style, Elements.BoolField.Options);
-                value = EditorGUILayout.Toggle(obj != null ? (System.Boolean)obj : value);
+                value = EditorGUILayout.Toggle(obj != null ? (bool)obj : value);
                 EditorGUILayout.EndHorizontal();
                 return value;
             }
@@ -95,17 +96,16 @@ namespace SerializedActions.Editors {
         /// <param name="argumentType">Type of argument</param>
         /// <param name="paramName">Parameter name</param>
         /// <returns>Returns the value retreived from the editor</returns>
-        public static object DrawArgumentIfType(object argument, Type argumentType, string paramName, bool shouldShowName = true, bool shouldShowType = true) {
-            if (argument == null)
-                return Drawings.UnityObjectField<UnityEngine.Object>(argument as UnityEngine.Object, argumentType, paramName, shouldShowName, shouldShowType);
-            else if (argumentType.IsSubclassOf(typeof(UnityEngine.Object)) || argumentType == typeof(UnityEngine.Object))
-                return Drawings.UnityObjectField<UnityEngine.Object>(argument as UnityEngine.Object, argumentType, paramName, shouldShowName, shouldShowType);
-            else if (argumentType.IsSubclassOf(typeof(Component)) || argumentType == typeof(Component))
-                return Drawings.UnityObjectField<Component>(argument as Component, argumentType, paramName, shouldShowName, shouldShowType);
-            else
-                return Drawings.PrimitiveField(argument, argumentType, paramName);
+        public static object DrawField(object argument, Type argumentType, string paramName, bool shouldShowName = true, bool shouldShowType = true) {
+            if (argumentType.IsPrimitiveType())
+                return PrimitiveField(argument, argumentType, paramName);
+            else {
+                if (argumentType == null)
+                    return UnityObjectField<UnityEngine.Object>(null, typeof(UnityEngine.Object), paramName, shouldShowName, shouldShowType);
+                else
+                    return UnityObjectField<UnityEngine.Object>((UnityEngine.Object)argument, argumentType, paramName, shouldShowName, shouldShowType);
+            }
         }
-
-
     }
 }
+#endif

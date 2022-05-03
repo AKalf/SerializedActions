@@ -1,18 +1,18 @@
-﻿#define UNITY_EDITOR
-#undef DEBUG_SerializedActions
+﻿#undef DEBUG_SerializedActions
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
+using SerializedParameters = SerializedActions.SerializedActions_SerializedParameters;
+using SerializedActions.Extensions;
 
 
 [System.Serializable]
-public class SerializedAction_Instance {
-    public enum ActionTimeline { OnAwake, OnStart, OnEnable, OnDisable, OnPointerEnterInteraction }
+public class SerializedAction_Container {
+    public enum ActionTimeline { OnAwake, OnStart, OnEnable, OnDisable, OnInteraction }
     /// <summary>/// The object that triggeres the action ///</summary>
     [SerializeField]
     public UnityEngine.Object TriggerInput;
@@ -24,33 +24,20 @@ public class SerializedAction_Instance {
     /// <summary>/// The name of the method of the action ///</summary>
     public string MethodName = "";
 
-    /// <summary>/// The string that holds the serialized arguments ///</summary>
+    /// <summary>/// The parameter values to invoke the method with///</summary>
     [SerializeField]
-    public string SerializedArray = "";
-
-    /// <summary>/// The arguments for the method ///</summary>
-    public System.Object[] Arguments;
-
-    /// <summary>/// The names of the arguments for debugging ///</summary>
-    [SerializeField]
-    public List<string> ArgumentNames = new List<string>();
-
-    [SerializeField]
-    public List<string> ArgumentTypesNames = new List<string>();
-    /// <summary>/// To use only internally. The arguments of type UnityEngine.Object. They are stored seperatly and seriliazation is handled by Unity. ///</summary>
-    [SerializeField]
-    public UnityEngine.Object[] UnityArguments;
+    public List<SerializedParameters> Parameters = new List<SerializedParameters>();
 
     [SerializeField]
     public UnityEngine.EventSystems.EventTriggerType TriggerType = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
-    /// <summary>/// To use only internally. The arguments of type UnityEngine.Vector. They are stored seperatly and seriliazation is handled by Unity. ///</summary>
-    // private Vector3[] vectorArguments;
 
     /// <summary>/// The action produced after deserializing and processing ///</summary>
     public UnityAction Action = null;
 
-#if UNITY_EDITOR
-    public SerializedAction_Instance(UnityEngine.Object trigger, MonoScript type, string methodName, System.Object[] args, List<string> paramNames, List<string> paramTypesNames) {
+    /// <summary>/// To use only internally. The arguments of type UnityEngine.Vector. They are stored seperatly and seriliazation is handled by Unity. ///</summary>
+    // private Vector3[] vectorArguments;
+
+    public SerializedAction_Container(UnityEngine.Object trigger, MonoScript type, string methodName, List<SerializedParameters> parameters) {
 
         // Assign trigger input
         this.TriggerInput = trigger;
@@ -58,28 +45,9 @@ public class SerializedAction_Instance {
         this.MethodName = methodName;
         // Get class
         this.ClassName = type.GetClass().FullName;
-
-        // Get Arguments
-        this.Arguments = new System.Object[args.Length];
-        this.UnityArguments = new UnityEngine.Object[args.Length];
-        // Filter arguments between objects that derive from System.Object and objects that derive from UnityEngine.Object
-        for (int i = 0; i < args.Length; i++) {
-            if (args[i] != null && args[i].GetType().IsSubclassOf(typeof(UnityEngine.Object))) {
-                this.UnityArguments[i] = args[i] as UnityEngine.Object;
-                this.Arguments[i] = null;
-            }
-            else {
-                this.UnityArguments[i] = null;
-                this.Arguments[i] = args[i] as System.Object;
-            }
-            // Assign argument names
-            this.ArgumentNames.Add(paramNames[i]);
-            // Assign argument type names
-            this.ArgumentTypesNames.Add(paramTypesNames[i]);
-
-        }
-        // Serialise arguments to XML string
-        this.SerializedArray = XmlSerializeToString(Arguments);
+        // Get parameters. If we just do: this.parameters = parameters, the values are no serialized and we end up with an empty list
+        foreach (SerializedParameters param in parameters)
+            this.Parameters.Add(param);
         #region Debug
 #if UNITY_EDITOR && DEBUG_SerializedActions
         DebugInstanceConstruction(trigger, type, methodName, args, paramNames, argumentTypesNames);
@@ -87,9 +55,7 @@ public class SerializedAction_Instance {
 #endif
         #endregion
     }
-#else
-    public SerializedAction() { }
-#endif
+
     public UnityAction GetAction(string timeline) {
         // Debug 
         #region Debug
@@ -97,94 +63,15 @@ public class SerializedAction_Instance {
         // Leave this above actual code
         DebugActionManifestation(timeline);
 #endif
-        #endregion
+        #endregion        
+        if (this.Parameters == null)
+            this.Parameters = new List<SerializedParameters>();
 
-        Arguments = XmlDeserializeFromString(SerializedArray);
-        if (this.Arguments == null) {
-            this.Arguments = new System.Object[0];
-        }
-
-        Type type = GetType(ClassName);
+        Type type = null;
+        type.GetTypeFromName(ClassName);
         MethodInfo method = type.GetMethod(MethodName);
-        this.Action = () => method.Invoke(TriggerInput, Arguments);
+        this.Action = () => method.Invoke(TriggerInput, Parameters.GetParametersAsSystemObjects());
         return Action;
-    }
-
-
-    public string XmlSerializeToString(System.Object[] array) {
-        var serializer = new System.Xml.Serialization.XmlSerializer(array.GetType());
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
-        using (System.IO.TextWriter writer = new System.IO.StringWriter(sb)) {
-            serializer.Serialize(writer, array);
-        }
-#if UNITY_EDITOR && DEBUG_SerializedActions
-        //Debug.Log("Trying to deserialize for testing...");
-        //System.Object[] args = XmlDeserializeFromString(sb.ToString());
-        //for (int i = 0; i < args.Length; i++) {
-        //    Debug.Log("Serialized argument: " + i + ") " + argumentNames[i] + " = " + args[i].ToString() + " succesfully");
-        //}
-        //Debug.Log("XML: " + sb.ToString());
-        //Debug.Log("############ SERILIZATION - END ############");
-#endif
-        return sb.ToString();
-    }
-    public System.Object[] XmlDeserializeFromString(string objectData) {
-        System.Object[] result = null;
-        if (string.IsNullOrEmpty(objectData) == false) {
-            var serializer = new System.Xml.Serialization.XmlSerializer(typeof(System.Object[]));
-            using (System.IO.TextReader reader = new System.IO.StringReader(objectData)) {
-                result = serializer.Deserialize(reader) as System.Object[];
-            }
-            if (UnityArguments.Length != result.Length)
-                return null;
-            if (result == null)
-                result = new System.Object[UnityArguments.Length];
-            if (result == null)
-                result = new System.Object[UnityArguments.Length];
-            for (int i = 0; i < result.Length; i++)
-                result[i] = UnityArguments[i];
-        }
-        else {
-            result = new System.Object[UnityArguments.Length];
-            for (int i = 0; i < result.Length; i++)
-                result[i] = UnityArguments[i];
-        }
-        return result;
-    }
-
-    public static Type GetType(string typeName) {
-        try {
-            Type type = Type.GetType(typeName);
-            if (type == null)
-                type = typeof(UnityEngine.GameObject).Module.GetTypes().FirstOrDefault(t => t.Name == typeName);
-            else
-                return type;
-            if (type == null)
-                type = typeof(UnityEngine.Component).Module.GetTypes().FirstOrDefault(t => t.Name == typeName);
-            else
-                return type;
-            if (type == null)
-                type = typeof(UnityEngine.UI.Selectable).Module.GetTypes().FirstOrDefault(t => t.Name == typeName);
-            else
-                return type;
-            if (type == null)
-                type = typeof(UnityEngine.Object).Assembly.GetTypes().FirstOrDefault(t => t.Name == typeName);
-            else
-                return type;
-            if (type == null)
-                type = typeof(CanvasGroup).Assembly.GetTypes().FirstOrDefault(t => t.Name == typeName);
-            else
-                return type;
-            if (type == null)
-                Debug.LogError("Error while trying to get type: " + typeName + " while de-serialising action");
-            return type;
-        }
-        catch (Exception ex) {
-            Debug.LogError("Error while trying to get type: " + typeName + " while de-serialising action\n Error: " + ex.Message);
-            return null;
-        }
-
     }
 
     // Debug functions

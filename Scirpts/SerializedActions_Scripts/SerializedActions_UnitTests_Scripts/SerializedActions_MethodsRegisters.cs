@@ -4,21 +4,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
-
+using SerializedActions.Extensions;
+using ActionContainer = SerializedAction_Container;
+using MonoManager = SerializedActions_MonobehaviourManager;
+using TypeUnitTest = SerializedActions.UnitTests.SerializedActions_UnitTestForType;
 namespace SerializedActions.UnitTests {
-    [CreateAssetMenu]
     [Serializable]
-    public class UnitTestsDataContainer : ScriptableObject {
+    [CreateAssetMenu]
+    public class SerializedActions_MethodsRegisters : ScriptableObject {
 
-        private const string pathToScriptable = "Assets/Scripts/SerializedActions_Scripts";
-
-        private static UnitTestsDataContainer instance = null;
+        [NonSerialized]
+        private static SerializedActions_MethodsRegisters instance = null;
 
         [HideInInspector]
-        public List<SerializedActionsManager> implementationsInProject = new List<SerializedActionsManager>();
+        public List<MonoManager> implementationsInProject = new List<MonoManager>();
         [SerializeField]
         [HideInInspector]
-        public List<SerializedAction_Instance> actionsInProject = new List<SerializedAction_Instance>();
+        public List<ActionContainer> actionsInProject = new List<ActionContainer>();
         [SerializeField]
         public List<MethodsOfType> classesAndMethods = new List<MethodsOfType>();
         [SerializeField]
@@ -26,18 +28,27 @@ namespace SerializedActions.UnitTests {
 
         private static string debugMessage = "";
 
-        public static UnitTestsDataContainer Instance() {
+        public static SerializedActions_MethodsRegisters Instance() {
+
             if (instance == null) {
-                string[] guids = AssetDatabase.FindAssets(string.Format("t:{0}", nameof(UnitTestsDataContainer)));
-                if (guids.Length == 0)
-                    return null;
-                guids = AssetDatabase.FindAssets(string.Format("t:{0}", nameof(UnitTestsDataContainer)));
-                instance = AssetDatabase.LoadAssetAtPath<UnitTestsDataContainer>(AssetDatabase.GUIDToAssetPath(guids[0]));
+                ScriptableObject inst = CreateInstance(typeof(SerializedActions_MethodsRegisters));
+                inst.name = "SerializedActions_TestsContainer_ScrObj";
+                string path = "Assets/Scirpts/SerializedActions_Scripts/SerializedActions_UnitTests_Scripts/SerializedActions_ScriptableObjects/";
+                SerializedActions_MethodsRegisters foundContainer = AssetDatabase.LoadAssetAtPath(path, typeof(ScriptableObject)) as SerializedActions_MethodsRegisters;
+                if (foundContainer == null) {
+                    AssetDatabase.CreateAsset(inst, path + inst.name + ".asset");
+                    instance = (SerializedActions_MethodsRegisters)inst;
+                }
+                else {
+                    Destroy(inst);
+                    instance = foundContainer;
+                }
+
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
             }
             return instance;
         }
-
-
 
         /// <summary>Check all SerializedActions in project for errors</summary>
         public void CheckActions() {
@@ -45,7 +56,7 @@ namespace SerializedActions.UnitTests {
             FindImplementations();
             Debug.Log(debugMessage.NewLine(2));
             if (implementationsInProject.Count > 0) {
-                foreach (SerializedActionsManager imple in implementationsInProject) {
+                foreach (MonoManager imple in implementationsInProject) {
                     debugMessage = ("Initialising tests for implementation: " + imple.name.Bold());
                     CheckImplementation(imple);
                 }
@@ -57,13 +68,16 @@ namespace SerializedActions.UnitTests {
                 debugMessage = "";
             }
         }
-        public void CheckSingleAction(SerializedAction_Instance serializedAction, SerializedActionsManager implementation) {
-            Type resolvedType = SerializedTypeTest.CheckType(serializedAction, monoscripts, implementation, classesAndMethods);
+        /// <summary>Checks a single action for conflicts</summary>
+        /// <param name="serializedAction">The action to check</param>
+        /// <param name="implementation">The SerializedActions_MonobehaviourManager component that it is stored</param>
+        public void CheckSingleAction(ActionContainer serializedAction, MonoManager implementation) {
+            Type resolvedType = TypeUnitTest.CheckType(serializedAction, monoscripts, implementation, classesAndMethods);
             if (resolvedType != null) {
-                if (SerializedMethods.CheckMethods(serializedAction, SerializedAction_Instance.GetType(serializedAction.ClassName), implementation, classesAndMethods, ref debugMessage)) {
-                    SerializedParametersTest.CheckMethodParameters(
+                if (SerializedActions_UnitTestForMethod.CheckMethods(serializedAction, resolvedType.GetTypeFromName(serializedAction.ClassName), implementation, classesAndMethods, ref debugMessage)) {
+                    SerializedActions_UnitTestForParameters.CheckMethodParameters(
                         // Method info
-                        SerializedAction_Instance.GetType(serializedAction.ClassName).GetMethod(serializedAction.MethodName),
+                        resolvedType.GetTypeFromName(serializedAction.ClassName).GetMethod(serializedAction.MethodName),
                         // Action
                         serializedAction,
                         // Implementation
@@ -79,7 +93,7 @@ namespace SerializedActions.UnitTests {
         /// <param name="action">The action to add</param>
         /// <param name="script">The script holding the class of the action</param>
         /// <param name="method">The method of the action</param>
-        public void AddAction(SerializedAction_Instance action, MonoScript script, MethodInfo method) {
+        public void AddAction(ActionContainer action, MonoScript script, MethodInfo method) {
             if (monoscripts.Contains(script) == false) { // If monoscript has not been used before
                 BaseImplementationMethodAttribute attr = (BaseImplementationMethodAttribute)method.GetCustomAttribute(typeof(BaseImplementationMethodAttribute));
                 if (attr != null) { // if method has the attribute
@@ -90,9 +104,9 @@ namespace SerializedActions.UnitTests {
             }
             else {
                 BaseImplementationMethodAttribute attr = (BaseImplementationMethodAttribute)method.GetCustomAttribute(typeof(BaseImplementationMethodAttribute));
-                MethodsOfType cm = GetStructByType(script.GetClass().Name, classesAndMethods);
-                if (cm != null && attr != null)
-                    cm.AddMethod(method.Name, attr.MethodID);
+                MethodsOfType methodOfType = GetStructByType(script.GetClass().Name, classesAndMethods);
+                if (methodOfType != null && attr != null)
+                    methodOfType.AddMethod(method.Name, attr.MethodID);
             }
             if (actionsInProject.Contains(action) == false) {
                 actionsInProject.Add(action);
@@ -100,10 +114,9 @@ namespace SerializedActions.UnitTests {
             EditorUtility.SetDirty(instance);
             AssetDatabase.SaveAssets();
         }
-
         /// <summary>Check implementation for errors </summary>
         /// <param name="imple">Implementation to check</param>
-        private void CheckImplementation(SerializedActionsManager imple) {
+        private void CheckImplementation(MonoManager imple) {
             debugMessage.NewLine(2);
             if (imple.OnAwakeActions.Count > 0) {
                 debugMessage += "Checking " + "On Awake".Bold() + " list";
@@ -129,25 +142,23 @@ namespace SerializedActions.UnitTests {
                 Debug.Log(debugMessage.NewLine(2));
                 debugMessage = "";
             }
-            if (imple.OnPointEnterActions.Count > 0) {
+            if (imple.OnInteractionActions.Count > 0) {
                 debugMessage += "Checking " + "On Select".Bold() + " list";
-                CheckList(imple.OnPointEnterActions, imple);
+                CheckList(imple.OnInteractionActions, imple);
                 Debug.Log(debugMessage.NewLine(2));
                 debugMessage = "";
             }
-
             EditorUtility.SetDirty(imple.gameObject);
-
         }
 
-        private void CheckList(List<SerializedAction_Instance> list, SerializedActionsManager implementation) {
-            foreach (SerializedAction_Instance serializedAction in list) {
-                Type resolvedType = SerializedTypeTest.CheckType(serializedAction, monoscripts, implementation, classesAndMethods);
+        private void CheckList(List<ActionContainer> list, MonoManager implementation) {
+            foreach (ActionContainer serializedAction in list) {
+                Type resolvedType = TypeUnitTest.CheckType(serializedAction, monoscripts, implementation, classesAndMethods);
                 if (resolvedType != null) {
-                    if (SerializedMethods.CheckMethods(serializedAction, SerializedAction_Instance.GetType(serializedAction.ClassName), implementation, classesAndMethods, ref debugMessage)) {
-                        SerializedParametersTest.CheckMethodParameters(
+                    if (SerializedActions_UnitTestForMethod.CheckMethods(serializedAction, resolvedType.GetTypeFromName(serializedAction.ClassName), implementation, classesAndMethods, ref debugMessage)) {
+                        SerializedActions_UnitTestForParameters.CheckMethodParameters(
                             // Method info
-                            SerializedAction_Instance.GetType(serializedAction.ClassName).GetMethod(serializedAction.MethodName),
+                            resolvedType.GetTypeFromName(serializedAction.ClassName).GetMethod(serializedAction.MethodName),
                             // Action
                             serializedAction,
                             // Implementation
@@ -162,24 +173,25 @@ namespace SerializedActions.UnitTests {
         }
 
         protected static MethodsOfType GetStructByType(string name, List<MethodsOfType> methodsOfType) {
-            foreach (MethodsOfType cm in methodsOfType) {
-                if (cm.TypeName == name)
-                    return cm;
+            foreach (MethodsOfType method in methodsOfType) {
+                if (method.TypeName == name)
+                    return method;
             }
             return null;
         }
+
         /// <summary>Searches all scenes and prefabs for objects with the "SerializedAction_MonoBehaviour" component </summary>
         private void FindImplementations() {
             implementationsInProject.Clear();
             string[] guids = AssetDatabase.FindAssets(string.Format("t:{0}", nameof(GameObject)));
-            List<SerializedActionsManager> implementations = new List<SerializedActionsManager>();
+            List<MonoManager> implementations = new List<MonoManager>();
             // Prefab Search
             debugMessage += "\nPrefab implementations: ";
             for (int i = 0; i < guids.Length; i++) {
                 string Path = AssetDatabase.GUIDToAssetPath(guids[i]);
                 GameObject gameObject = AssetDatabase.LoadAssetAtPath<GameObject>(Path);
                 if (gameObject != null) {
-                    SerializedActionsManager Implementation = gameObject.GetComponent<SerializedActionsManager>();
+                    MonoManager Implementation = gameObject.GetComponent<MonoManager>();
                     if (Implementation != null && implementationsInProject.Contains(Implementation) == false) {
                         implementationsInProject.Add(Implementation);
                         debugMessage += Implementation.name + " | ";
@@ -198,14 +210,14 @@ namespace SerializedActions.UnitTests {
                 }
                 GameObject[] rootGameobjects = scene.GetRootGameObjects();
                 foreach (GameObject root in rootGameobjects) {
-                    SerializedActionsManager rootImple = root.GetComponent<SerializedActionsManager>();
+                    MonoManager rootImple = root.GetComponent<MonoManager>();
                     if (rootImple != null && implementationsInProject.Contains(rootImple) == false) {
                         implementationsInProject.Add(rootImple);
                         debugMessage += rootImple.name + " | ";
                     }
-                    SerializedActionsManager[] children = root.GetComponentsInChildren<SerializedActionsManager>();
+                    MonoManager[] children = root.GetComponentsInChildren<MonoManager>();
                     if (children.Length > 0) {
-                        foreach (SerializedActionsManager child in children) {
+                        foreach (MonoManager child in children) {
                             if (implementationsInProject.Contains(child) == false)
                                 implementationsInProject.Add(child);
                             debugMessage += child.name + " | ";
@@ -245,7 +257,9 @@ namespace SerializedActions.UnitTests {
             /// <returns>Returns a list with methods that have the "BaseImplementationMethodAttribute" attribute</returns>
             public List<MethodInfo> RegisterMethods() {
                 List<MethodInfo> results = new List<MethodInfo>();
-                MethodInfo[] classMethods = SerializedAction_Instance.GetType(typeName).GetMethods(BindingFlags.Public | BindingFlags.Static);
+                Type type = null;
+                type = type.GetTypeFromName(typeName);
+                MethodInfo[] classMethods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
                 debugMessage += "\n\nPublic static methods found: " + classMethods.Length.NewLine();
                 foreach (MethodInfo info in classMethods) {
                     debugMessage += "Checking method: " + info.Name + " for attribute".NewLine();

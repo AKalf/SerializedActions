@@ -1,20 +1,21 @@
-﻿using System;
-using System.Collections;
+﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-
+using SerializedActions.Extensions;
 namespace SerializedActions.UnitTests {
-    public class SerializedTypeTest : UnitTestsDataContainer {
-        public static Type CheckType(SerializedAction_Instance action, List<MonoScript> monoscripts, SerializedActionsManager implementation, List<MethodsOfType> classesAndMethods) {
+    public class SerializedActions_UnitTestForType : SerializedActions_MethodsRegisters {
+        public static Type CheckType(SerializedAction_Container action, List<MonoScript> monoscripts, SerializedActions_MonobehaviourManager implementation, List<MethodsOfType> classesAndMethods) {
             string debugMessage = "\n\n-----|Checking Class Name for action with " +
-                "Method: " + action.MethodName.Bold() + ", " +
-                "Implementation: " + implementation.gameObject.name.Bold() + ", " +
-                "Class name: " + action.ClassName.Bold();
-            Type resolvedType = SerializedAction_Instance.GetType(action.ClassName);
+                "Method: " + action.MethodName.Bold().Comma() +
+                "Implementation: " + implementation.gameObject.name.Bold().Comma() +
+                "Class name: " + action.ClassName.Bold().NewLine();
+            Type resolvedType = null;
+            resolvedType = resolvedType.GetTypeFromName(action.ClassName);
 
             if (resolvedType != null) {
-                debugMessage += "\n Type found successfully (" + resolvedType.Name.Bold() + ")";
+                debugMessage += "Type found successfully (" + resolvedType.Name.Bold() + ")";
                 return resolvedType;
             }
             else {
@@ -39,17 +40,18 @@ namespace SerializedActions.UnitTests {
             }
             return null;
         }
-        private static Type CheckAndRetrieveClass(MethodsOfType cm, MonoScript mono, ref string debugMessage) {
-            Type t = SerializedAction_Instance.GetType(cm.TypeName);
+        private static Type CheckAndRetrieveClass(MethodsOfType methodOfType, MonoScript mono, ref string debugMessage) {
+            Type t = null;
+            t = t.GetTypeFromName(methodOfType.TypeName);
             if (t == null) {
-                debugMessage += string.Format(ResolvedConflict, cm.TypeName, mono.GetClass().Name);
-                Debug.Log(string.Format(ResolvedConflict, cm.TypeName, mono.GetClass().Name) + "\nDebug:\n" + debugMessage + "\n\n");
-                cm.TypeName = mono.GetClass().Name;
+                debugMessage += string.Format(ResolvedConflict, methodOfType.TypeName, mono.GetClass().Name);
+                Debug.Log(string.Format(ResolvedConflict, methodOfType.TypeName, mono.GetClass().Name) + "\nDebug:\n" + debugMessage + "\n\n");
+                methodOfType.TypeName = mono.GetClass().Name;
             }
-            t = SerializedAction_Instance.GetType(cm.TypeName);
+            t = t.GetTypeFromName(methodOfType.TypeName);
             if (t == null) {
-                debugMessage += string.Format(CouldNotFindTypeInMonoScript, cm.TypeName, mono.name);
-                Debug.LogError(string.Format(CouldNotFindTypeInMonoScript, cm.TypeName, mono.name) + "\n Debug:\n" + debugMessage + "\n\n");
+                debugMessage += string.Format(CouldNotFindTypeInMonoScript, methodOfType.TypeName, mono.name);
+                Debug.LogError(string.Format(CouldNotFindTypeInMonoScript, methodOfType.TypeName, mono.name) + "\n Debug:\n" + debugMessage + "\n\n");
 
             }
             return t;
@@ -97,3 +99,4 @@ namespace SerializedActions.UnitTests {
         #endregion
     }
 }
+#endif
