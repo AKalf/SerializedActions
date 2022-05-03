@@ -340,8 +340,74 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b5b4d0d4544a5942845d490111ed5c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnAwakeActions: []
+  OnAwakeActions:
+  - TriggerInput: {fileID: 0}
+    ClassName: TestMethods
+    MethodName: DebugGameobjectOrsOMEName
+    Parameters:
+    - ParameterName: b
+      ParameterTypeName: Boolean
+      thisType: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 1
+      objectValue: {fileID: 0}
+    - ParameterName: c
+      ParameterTypeName: Single
+      thisType: 2
+      intValue: 0
+      floatValue: 0.2
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: var
+      ParameterTypeName: Int32
+      thisType: 1
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    TriggerType: 0
   OnStartActions: []
   OnEnableActions: []
   OnDisableActions: []
-  OnInteractionActions: []
+  OnInteractionActions:
+  - TriggerInput: {fileID: 894536597}
+    ClassName: TestMethods
+    MethodName: DebugTheOther
+    Parameters:
+    - ParameterName: number
+      ParameterTypeName: Int32
+      thisType: 1
+      intValue: 100
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: aString
+      ParameterTypeName: String
+      thisType: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: sss
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: b
+      ParameterTypeName: Boolean
+      thisType: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 1
+      objectValue: {fileID: 0}
+    - ParameterName: collider
+      ParameterTypeName: GameObject
+      thisType: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 894536597}
+    TriggerType: 0

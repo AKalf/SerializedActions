@@ -129,7 +129,10 @@ namespace SerializedActions.Editors {
             debugMessage += "\nPublic static methods found: " + methodNames.Count.NewLine();
             if (methodNames.Count > 0) {
                 // if names found, initalize  methods pop-up values
+                int prevValue = selectedMethodNameIndex;
                 selectedMethodNameIndex = EditorGUILayout.Popup("Available methods: " + methodNames.Count, selectedMethodNameIndex, methodNames.ToArray());
+                if (prevValue != selectedMethodNameIndex)
+                    hasPressedGetParameters = false;
                 GUILayout.Space(15);
                 return true;
             }
@@ -190,7 +193,7 @@ namespace SerializedActions.Editors {
                 ActionContainer action;
                 action = new ActionContainer(triggerObject, monoscript, methodNames[selectedMethodNameIndex], parameters);
                 actionList.Add(action);
-                SerializedActions.UnitTests.SerializedActions_MethodsRegisters.Instance().AddAction(action, monoscript, methodsRetrieved[selectedMethodNameIndex]);
+                SerializedActions.UnitTests.SerializedActions_MethodsRegisters.Instance().AddAction(targetInstance, action, monoscript, methodsRetrieved[selectedMethodNameIndex]);
                 EditorUtility.SetDirty(targetInstance);
                 Debugs.SerializedActions_Debugs.DebugRegisterNewAction(action, selectedTimeline, ref debugMessage);
                 Debug.Log(debugMessage.NewLine(2));

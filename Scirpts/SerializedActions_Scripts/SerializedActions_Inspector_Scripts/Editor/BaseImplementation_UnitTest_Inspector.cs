@@ -1,18 +1,20 @@
 ﻿
 using SerializedActions.UnitTests;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
+using SerializedActions.Extensions;
+using MonoManager = SerializedActions_MonobehaviourManager;
 namespace SerializedActions.Editors {
     [UnityEditor.CustomEditor(typeof(SerializedActions_MethodsRegisters))]
-
     public class BaseImplementation_UnitTest_Inspector : Editor {
-
+        private string debugMessage = "";
         private bool showImplementations = false;
         private bool[] showImplementation = null;
-        private Dictionary<SerializedActions_MonobehaviourManager, bool[]> actions = new Dictionary<SerializedActions_MonobehaviourManager, bool[]>();
-        private const int TIMELINES_COUNT = 5;
+        private Dictionary<MonoManager, bool[]> implementationsInProject = new Dictionary<MonoManager, bool[]>();
+        private const int TOTAL_TIMELINES = 5;
         public override void OnInspectorGUI() {
             SerializedActions_MethodsRegisters targetInstance = (SerializedActions_MethodsRegisters)target;
             SerializedObject objInstance = new SerializedObject(targetInstance);
@@ -20,18 +22,18 @@ namespace SerializedActions.Editors {
                 return;
             objInstance.Update();
             base.OnInspectorGUI();
-            showImplementations = EditorGUILayout.Foldout(showImplementations, "Show implementations");
-            if (showImplementations) {
+            showImplementations = EditorGUILayout.Foldout(showImplementations, "Show implementations    Total: " + targetInstance.implementationsInProject.Count);
+            if (showImplementations && targetInstance.implementationsInProject.Count > 0) {
                 if (showImplementation == null) { // Initialise
-                    showImplementation = new bool[targetInstance.implementationsInProject.Count];
-                    foreach (SerializedActions_MonobehaviourManager imple in targetInstance.implementationsInProject)
-                        actions.Add(imple, new bool[TIMELINES_COUNT]);
+                    FindImplementations();
+                    showImplementation = new bool[implementationsInProject.Keys.Count];
                 }
-                for (int i = 0; i < showImplementation.Length; i++) {
-                    ShowImplementationLists(ref showImplementation[i], targetInstance.implementationsInProject[i]);
-                    GUILayout.Space(10);
+                else {
+                    for (int i = 0; i < showImplementation.Length; i++) {
+                        ShowImplementationLists(ref showImplementation[i], targetInstance.implementationsInProject[i]);
+                        GUILayout.Space(10);
+                    }
                 }
-
             }
             if (GUILayout.Button("Check actions"))
                 targetInstance.CheckActions();
@@ -42,25 +44,27 @@ namespace SerializedActions.Editors {
                 targetInstance.classesAndMethods.Clear();
                 SerializedActions_MethodsRegisters.Instance().monoscripts.Clear();
             }
+            if (GUILayout.Button("Clear implementations"))
+                targetInstance.implementationsInProject.Clear();
             EditorGUILayout.LabelField("Total registered types by names: " + targetInstance.monoscripts.Count);
             foreach (MonoScript script in targetInstance.monoscripts)
                 EditorGUILayout.LabelField(script.GetClass().Name);
 
         }
-        private void ShowImplementationLists(ref bool foldout, SerializedActions_MonobehaviourManager implementation) {
+        private void ShowImplementationLists(ref bool foldout, MonoManager implementation) {
+            if (implementation == null) return;
             GUIStyle s = new GUIStyle(EditorStyles.foldout);
             s.margin.left = 20;
             foldout = EditorGUILayout.Foldout(foldout, implementation.name, s);
             if (foldout) {
                 SerializedActions_MonobehaviourManager imple = implementation;
-                ShowList(imple.OnAwakeActions, ref actions[imple][0], "On Awake");
-                ShowList(imple.OnStartActions, ref actions[imple][1], "On Start");
-                ShowList(imple.OnEnableActions, ref actions[imple][2], "On Enable");
-                ShowList(imple.OnDisableActions, ref actions[imple][3], "On Disable");
-                ShowList(imple.OnInteractionActions, ref actions[imple][4], "On Select");
+                ShowList(imple.OnAwakeActions, ref implementationsInProject[imple][0], "On Awake");
+                ShowList(imple.OnStartActions, ref implementationsInProject[imple][1], "On Start");
+                ShowList(imple.OnEnableActions, ref implementationsInProject[imple][2], "On Enable");
+                ShowList(imple.OnDisableActions, ref implementationsInProject[imple][3], "On Disable");
+                ShowList(imple.OnInteractionActions, ref implementationsInProject[imple][4], "On Select");
             }
         }
-
         private void ShowList(List<SerializedAction_Container> actions, ref bool foldout, string listName) {
             if (actions.Count > 0) {
                 GUILayout.Space(2.5f);
@@ -78,6 +82,52 @@ namespace SerializedActions.Editors {
                     }
                 }
             }
+        }
+        private void FindImplementations() {
+            implementationsInProject.Clear();
+            string[] guids = AssetDatabase.FindAssets(string.Format("t:{0}", nameof(GameObject)));
+            List<MonoManager> implementations = new List<MonoManager>();
+            // Prefab Search
+            debugMessage += "\nPrefab implementations: ";
+            for (int i = 0; i < guids.Length; i++) {
+                string Path = AssetDatabase.GUIDToAssetPath(guids[i]);
+                GameObject gameObject = AssetDatabase.LoadAssetAtPath<GameObject>(Path);
+                if (gameObject != null) {
+                    MonoManager Implementation = gameObject.GetComponent<MonoManager>();
+                    if (Implementation != null && implementationsInProject.Keys.Contains(Implementation) == false) {
+                        implementationsInProject.Add(Implementation, new bool[TOTAL_TIMELINES]);
+                        debugMessage += Implementation.name + " | ";
+                    }
+                }
+            }
+            int prefablImplementations = implementationsInProject.Count;
+            debugMessage += "\n\nTotal implementations found in prefabs: " + implementationsInProject.Count.NewLine(2);
+            // GameObjects in Scenes, Search
+            debugMessage += "Gameobjects in scenes: ";
+            for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++) {
+                Scene scene = SceneManager.GetSceneByBuildIndex(i);
+                if (scene.IsValid() == false) {
+                    Debug.LogError("Serialized Action ERROR: ".Colored(Color.red).Bold() + "Could retrieve scene with build-index: " + i);
+                    continue;
+                }
+                GameObject[] rootGameobjects = scene.GetRootGameObjects();
+                foreach (GameObject root in rootGameobjects) {
+                    MonoManager rootImple = root.GetComponent<MonoManager>();
+                    if (rootImple != null && implementationsInProject.Keys.Contains(rootImple) == false) {
+                        implementationsInProject.Add(rootImple, new bool[TOTAL_TIMELINES]);
+                        debugMessage += rootImple.name + " | ";
+                    }
+                    MonoManager[] children = root.GetComponentsInChildren<MonoManager>();
+                    if (children.Length > 0) {
+                        foreach (MonoManager child in children) {
+                            if (implementationsInProject.Keys.Contains(child) == false)
+                                implementationsInProject.Add(child, new bool[TOTAL_TIMELINES]);
+                            debugMessage += child.name + " | ";
+                        }
+                    }
+                }
+            }
+            debugMessage += "\n\nImplementations in scenes found: " + (implementationsInProject.Count - prefablImplementations);
         }
     }
 }

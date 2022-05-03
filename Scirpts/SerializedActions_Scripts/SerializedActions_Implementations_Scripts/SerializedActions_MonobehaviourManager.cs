@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
+[Serializable]
 /// <summary>Derive your class from this in order to make it compatible with SerializedActions Inspector </summary>
 public class SerializedActions_MonobehaviourManager : MonoBehaviour {
     [SerializeField]
@@ -14,7 +15,7 @@ public class SerializedActions_MonobehaviourManager : MonoBehaviour {
         OnEnableActions = new List<SerializedAction_Container>(),
         OnDisableActions = new List<SerializedAction_Container>(),
         OnInteractionActions = new List<SerializedAction_Container>();
-
+    [NonSerialized]
     private string debugMessage;
 
     // Unity Callbacks

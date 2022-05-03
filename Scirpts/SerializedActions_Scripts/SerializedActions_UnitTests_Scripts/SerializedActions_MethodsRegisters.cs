@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
@@ -11,12 +12,14 @@ using TypeUnitTest = SerializedActions.UnitTests.SerializedActions_UnitTestForTy
 namespace SerializedActions.UnitTests {
     [Serializable]
     [CreateAssetMenu]
+    [InitializeOnLoad]
     public class SerializedActions_MethodsRegisters : ScriptableObject {
 
         [NonSerialized]
         private static SerializedActions_MethodsRegisters instance = null;
 
         [HideInInspector]
+        [SerializeField]
         public List<MonoManager> implementationsInProject = new List<MonoManager>();
         [SerializeField]
         [HideInInspector]
@@ -26,24 +29,36 @@ namespace SerializedActions.UnitTests {
         [SerializeField]
         public List<MonoScript> monoscripts = new List<MonoScript>();
 
+        private static EditorApplication.CallbackFunction editorCallback = () => Instance().CheckActions();
         private static string debugMessage = "";
+        private const string NEW_SCRIPTABLE_NAME = "SerializedActions_RegisteredMethods_ScriptableObject";
+        private const string SCRIPTABLE_PATH = "Assets/Scirpts/SerializedActions_Scripts/SerializedActions_UnitTests_Scripts/SerializedActions_ScriptableObjects/";
+
+        static SerializedActions_MethodsRegisters() {
+            EditorApplication.update += editorCallback;
+        }
 
         public static SerializedActions_MethodsRegisters Instance() {
 
             if (instance == null) {
-                ScriptableObject inst = CreateInstance(typeof(SerializedActions_MethodsRegisters));
-                inst.name = "SerializedActions_TestsContainer_ScrObj";
-                string path = "Assets/Scirpts/SerializedActions_Scripts/SerializedActions_UnitTests_Scripts/SerializedActions_ScriptableObjects/";
-                SerializedActions_MethodsRegisters foundContainer = AssetDatabase.LoadAssetAtPath(path, typeof(ScriptableObject)) as SerializedActions_MethodsRegisters;
-                if (foundContainer == null) {
-                    AssetDatabase.CreateAsset(inst, path + inst.name + ".asset");
-                    instance = (SerializedActions_MethodsRegisters)inst;
+                EditorApplication.update -= editorCallback;
+                string[] guids = AssetDatabase.FindAssets("t:" + typeof(SerializedActions_MethodsRegisters).Name);
+                SerializedActions_MethodsRegisters foundContainer = null;
+                if (guids.Length > 0) {
+                    for (int i = 1; i < guids.Length; i++)
+                        AssetDatabase.DeleteAsset(AssetDatabase.GUIDToAssetPath(guids[i]));
+                    foundContainer = AssetDatabase.LoadAssetAtPath(
+                       AssetDatabase.GUIDToAssetPath(guids[0]), typeof(SerializedActions_MethodsRegisters))
+                       as SerializedActions_MethodsRegisters;
                 }
-                else {
-                    Destroy(inst);
+                if (foundContainer != null) {
                     instance = foundContainer;
+                    return instance;
                 }
-
+                ScriptableObject inst = CreateInstance(typeof(SerializedActions_MethodsRegisters));
+                inst.name = NEW_SCRIPTABLE_NAME;
+                AssetDatabase.CreateAsset(inst, SCRIPTABLE_PATH + inst.name + ".asset");
+                instance = (SerializedActions_MethodsRegisters)inst;
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
@@ -93,13 +108,16 @@ namespace SerializedActions.UnitTests {
         /// <param name="action">The action to add</param>
         /// <param name="script">The script holding the class of the action</param>
         /// <param name="method">The method of the action</param>
-        public void AddAction(ActionContainer action, MonoScript script, MethodInfo method) {
+        public void AddAction(MonoManager managerInstance, ActionContainer action, MonoScript script, MethodInfo method) {
             if (monoscripts.Contains(script) == false) { // If monoscript has not been used before
                 BaseImplementationMethodAttribute attr = (BaseImplementationMethodAttribute)method.GetCustomAttribute(typeof(BaseImplementationMethodAttribute));
                 if (attr != null) { // if method has the attribute
-                    MethodsOfType cm = new MethodsOfType(script.GetClass().Name, method.Name, attr.MethodID);
-                    classesAndMethods.Add(cm);
+                    MethodsOfType methodOfType = new MethodsOfType(script.GetClass().Name, method.Name, attr.MethodID);
+                    classesAndMethods.Add(methodOfType);
                     monoscripts.Add(script);
+                    implementationsInProject.Add(managerInstance);
+                    EditorUtility.SetDirty(this);
+                    AssetDatabase.SaveAssets();
                 }
             }
             else {
@@ -307,3 +325,4 @@ namespace SerializedActions.UnitTests {
         }
     }
 }
+#endif

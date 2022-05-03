@@ -1,0 +1,112 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1102f895919c81042bd14b3447ac4f5b, type: 3}
+  m_Name: SerializedActions_RegisteredMethods_ScriptableObject
+  m_EditorClassIdentifier: 
+  implementationsInProject:
+  - {fileID: 0}
+  actionsInProject:
+  - TriggerInput: {fileID: 0}
+    ClassName: TestMethods
+    MethodName: DebugGameobjectName
+    Parameters:
+    - ParameterName: b
+      ParameterTypeName: Boolean
+      thisType: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: s
+      ParameterTypeName: String
+      thisType: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: sss
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: a
+      ParameterTypeName: Int32
+      thisType: 1
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    TriggerType: 0
+  - TriggerInput: {fileID: 0}
+    ClassName: TestMethods
+    MethodName: DebugOther
+    Parameters:
+    - ParameterName: b
+      ParameterTypeName: Boolean
+      thisType: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: c
+      ParameterTypeName: Single
+      thisType: 2
+      intValue: 0
+      floatValue: 0.5
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    TriggerType: 0
+  - TriggerInput: {fileID: 0}
+    ClassName: TestMethods
+    MethodName: DebugOther
+    Parameters:
+    - ParameterName: number
+      ParameterTypeName: Int32
+      thisType: 1
+      intValue: 100
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: aString
+      ParameterTypeName: String
+      thisType: 3
+      intValue: 0
+      floatValue: 0
+      stringValue: sss
+      boolValue: 0
+      objectValue: {fileID: 0}
+    - ParameterName: b
+      ParameterTypeName: Boolean
+      thisType: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 1
+      objectValue: {fileID: 0}
+    - ParameterName: collider
+      ParameterTypeName: GameObject
+      thisType: 0
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 0
+      objectValue: {fileID: 0}
+    TriggerType: 0
+  classesAndMethods:
+  - typeName: TestMethods
+    methodsIDs: 0000000001000000
+    methodsNames:
+    - DebugGameobjectName
+    - DebugOther
+  monoscripts:
+  - {fileID: 11500000, guid: ea4ad92c590dc9d4ea4e26c90178cb19, type: 3}

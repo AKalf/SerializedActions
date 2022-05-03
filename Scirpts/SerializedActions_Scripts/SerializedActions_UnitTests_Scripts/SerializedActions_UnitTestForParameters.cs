@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using SerializedActions.Extensions;
+using SerializedParameter = SerializedActions.SerializedActions_SerializedParameters;
+using System.Linq;
 
 namespace SerializedActions.UnitTests {
     public class SerializedActions_UnitTestForParameters : SerializedActions_MethodsRegisters {
@@ -35,15 +37,13 @@ namespace SerializedActions.UnitTests {
                 debugMessage += string.Format(NeedToCheckActionWarning, imple.name, methodInfo.Name, action.ClassName).NewLine();
                 debugMessage += "Trying to resolve conflicts...".NewLine();
 
-                List<SerializedActions_SerializedParameters> resolvedArguments = new List<SerializedActions_SerializedParameters>();
+                SerializedParameter[] resolvedArguments = new SerializedParameter[actual.Length];
                 // Try to resolve conflict by finding a parameter with same name and type
                 ResolveArgumentsByName(resolvedArguments, serializedAction);
                 // Try to resolve unresolved conflicts by finding parameters with the same index and type
                 ResolveArgumentsByType(resolvedArguments, serializedAction);
-                // Resolve null values by creating an empty instance of their type.
-                ForceResolve();
-                //foreach (ParameterInfo info in actual)
-                //    action.Parameters.Add(SerializedActions_SerializedParameters.CreateSerializedParameter(info.Name, info.ParameterType, info.ParameterType.GetDefaultValue()));
+                // Resolve null values by creating an empty instance of their type and assigns values to the action
+                ForceResolve(resolvedArguments);
             }
             else {
                 debugMessage += "Types were " + "correct!".Colored(Color.green);
@@ -83,26 +83,24 @@ namespace SerializedActions.UnitTests {
             return areAllEqual;
 
         }
-        private static void ResolveArgumentsByName(List<SerializedActions_SerializedParameters> resolvedArguments, SerializedAction_Container action) {
+        private static void ResolveArgumentsByName(SerializedParameter[] resolvedArguments, SerializedAction_Container action) {
             for (int j = 0; j < actual.Length; j++) {
                 for (int i = 0; i < action.Parameters.Count; i++) {
                     if (action.Parameters[i] != null
                         && AreStringsEqual(actual[j].Name, action.Parameters[i].ParameterName)
                         && AreStringsEqual(actual[j].ParameterType.Name, action.Parameters[i].ParameterTypeName)) {
-
                         // BODY:
+
                         string msg = string.Format(ResolvedConflict, actual[j].Name, actual[j].ParameterType.Name, j, method.Name, action.Parameters[i].ToString());
                         debugMessage += msg;
                         Debug.LogWarning(msg, implementation.gameObject);
-                        action.Parameters[i] = SerializedActions_SerializedParameters.CreateSerializedParameter(
-                                actual[j].Name, actual[j].ParameterType, action.Parameters[i].Value);
-                        resolvedArguments.Add(action.Parameters[i]);
+                        resolvedArguments[j] = action.Parameters[i];
                     }
 
                 }
             }
         }
-        private static void ResolveArgumentsByType(List<SerializedActions_SerializedParameters> resolvedArguments, SerializedAction_Container action) {
+        private static void ResolveArgumentsByType(SerializedParameter[] resolvedArguments, SerializedAction_Container action) {
             for (int j = 0; j < actual.Length; j++) {
                 for (int i = 0; i < action.Parameters.Count; i++) {
                     if (resolvedArguments.Contains(action.Parameters[i]) == false) {
@@ -110,22 +108,24 @@ namespace SerializedActions.UnitTests {
                             string msg = string.Format(ResolvedConflict, actual[j].Name, actual[j].ParameterType.Name, j, method.Name, action.Parameters[i].ToString());
                             debugMessage += msg;
                             Debug.LogWarning(msg, implementation.gameObject);
-                            action.Parameters[i] = SerializedActions_SerializedParameters.CreateSerializedParameter(
-                                actual[j].Name, actual[j].ParameterType, action.Parameters[i].Value);
-                            resolvedArguments.Add(action.Parameters[i]);
+                            resolvedArguments[j] = action.Parameters[i];
                         }
                     }
                 }
             }
         }
-        private static void ForceResolve() {
-            for (int i = 0; i < action.Parameters.Count; i++) {
-                if (action.Parameters[i] == null) {
-                    action.Parameters[i] = SerializedActions_SerializedParameters.CreateSerializedParameter(actual[i].Name, actual[i].ParameterType, action.Parameters[i].Value ?? actual[i].ParameterType.GetDefaultValue());
+        private static void ForceResolve(SerializedParameter[] resolvedArguments) {
+            action.Parameters.Clear();
+            for (int i = 0; i < resolvedArguments.Length; i++) {
+                if (resolvedArguments[i] == null) {
+                    action.Parameters.Add(SerializedParameter.CreateSerializedParameter(
+                        actual[i].Name, actual[i].ParameterType, actual[i].ParameterType.GetDefaultValue()));
                     string debugMsg = string.Format(NeedToAssignValueToParameter, implementation.name, method.Name, action.ClassName, actual[i].ParameterType.Name, actual[i].Name, i);
                     debugMessage += debugMsg;
                     Debug.LogError(debugMsg.NewLine(2), implementation.gameObject);
                 }
+                else
+                    action.Parameters.Add(resolvedArguments[i]);
             }
         }
         private static bool AreStringsEqual(string string1, string string2) {
