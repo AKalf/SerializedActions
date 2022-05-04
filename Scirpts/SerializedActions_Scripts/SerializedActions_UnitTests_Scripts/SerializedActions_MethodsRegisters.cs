@@ -39,7 +39,6 @@ namespace SerializedActions.UnitTests {
         }
 
         public static SerializedActions_MethodsRegisters Instance() {
-
             if (instance == null) {
                 EditorApplication.update -= editorCallback;
                 string[] guids = AssetDatabase.FindAssets("t:" + typeof(SerializedActions_MethodsRegisters).Name);
@@ -75,7 +74,7 @@ namespace SerializedActions.UnitTests {
                     debugMessage = ("Initialising tests for implementation: " + imple.name.Bold());
                     CheckImplementation(imple);
                 }
-                AssetDatabase.SaveAssets();
+
             }
             else {
                 debugMessage += "\nNo implementations found!".Colored(Color.red);
@@ -166,7 +165,7 @@ namespace SerializedActions.UnitTests {
                 Debug.Log(debugMessage.NewLine(2));
                 debugMessage = "";
             }
-            EditorUtility.SetDirty(imple.gameObject);
+
         }
 
         private void CheckList(List<ActionContainer> list, MonoManager implementation) {

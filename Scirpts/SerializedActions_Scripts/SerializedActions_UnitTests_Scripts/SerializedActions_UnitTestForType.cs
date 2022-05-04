@@ -4,9 +4,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using SerializedActions.Extensions;
+using MonoManager = SerializedActions_MonobehaviourManager;
 namespace SerializedActions.UnitTests {
     public class SerializedActions_UnitTestForType : SerializedActions_MethodsRegisters {
-        public static Type CheckType(SerializedAction_Container action, List<MonoScript> monoscripts, SerializedActions_MonobehaviourManager implementation, List<MethodsOfType> classesAndMethods) {
+        public static Type CheckType(SerializedAction_Container action, List<MonoScript> monoscripts, MonoManager implementation, List<MethodsOfType> classesAndMethods) {
             string debugMessage = "\n\n-----|Checking Class Name for action with " +
                 "Method: " + action.MethodName.Bold().Comma() +
                 "Implementation: " + implementation.gameObject.name.Bold().Comma() +
@@ -19,6 +20,7 @@ namespace SerializedActions.UnitTests {
                 return resolvedType;
             }
             else {
+                EditorUtility.SetDirty(implementation);
                 Debug.LogWarning(string.Format(TypeConflictWarning, action.ClassName, implementation.gameObject.name), implementation.gameObject);
                 debugMessage += (string.Format(TypeConflictWarning, action.ClassName, implementation.gameObject.name));
 
@@ -31,6 +33,9 @@ namespace SerializedActions.UnitTests {
                         // Debug resolve
                         debugMessage += string.Format(ResolvedConflict, action.ClassName, foundType.Name);
                         Debug.Log(string.Format(ResolvedConflict, action.ClassName, foundType.Name), implementation.gameObject);
+                        classesAndMethods[i].TypeName = foundType.Name;
+                        EditorUtility.SetDirty(SerializedActions_MethodsRegisters.Instance());
+                        AssetDatabase.SaveAssets();
                         return foundType;
                     }
                 }
@@ -52,7 +57,6 @@ namespace SerializedActions.UnitTests {
             if (t == null) {
                 debugMessage += string.Format(CouldNotFindTypeInMonoScript, methodOfType.TypeName, mono.name);
                 Debug.LogError(string.Format(CouldNotFindTypeInMonoScript, methodOfType.TypeName, mono.name) + "\n Debug:\n" + debugMessage + "\n\n");
-
             }
             return t;
         }

@@ -68,7 +68,9 @@ public class SerializedAction_Container {
             this.Parameters = new List<SerializedParameters>();
 
         Type type = null;
-        type.GetTypeFromName(ClassName);
+        type = Type.GetType(ClassName);
+        if (type == null)
+            type.GetTypeFromName(ClassName);
         MethodInfo method = type.GetMethod(MethodName);
         this.Action = () => method.Invoke(TriggerInput, Parameters.GetParametersAsSystemObjects());
         return Action;

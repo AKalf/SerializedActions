@@ -159,7 +159,7 @@ public class SerializedActions_MonobehaviourManager : MonoBehaviour {
             debugMessage += "Deserialized action: " + action.MethodName + '\n';
             if (action.Parameters != null)
                 Debug_ActionParameters(action.Parameters);
-            action.GetAction(timeline).Invoke();
+            action.GetAction(timeline);
             debugMessage += "Deserialisation has finished successfully for action with method: " + action.MethodName + '\n';
         }
         catch (Exception ex) {
@@ -221,7 +221,7 @@ public class SerializedActions_MonobehaviourManager : MonoBehaviour {
         System.Diagnostics.StackTrace st = new System.Diagnostics.StackTrace(actual, true);
         System.Diagnostics.StackFrame frame = st.GetFrame(0);
         int line = frame.GetFileLineNumber();
-        Debug.LogError("Error while invoking list: <b>" + listName + "</b>" +
+        Debug.LogError("Error while invoking list: <b>" + listName ?? "" + "</b>" +
             "\nException: " + ex.InnerException.Message +
             "\nClass: " + ex.InnerException.TargetSite.DeclaringType +
             "\nMethod: " + ex.InnerException.TargetSite +

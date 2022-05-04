@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using SerializedActions.Extensions;
+using UnityEditor;
+
 namespace SerializedActions.UnitTests {
     public class SerializedActions_UnitTestForMethod : SerializedActions_MethodsRegisters {
         public static bool CheckMethods(SerializedAction_Container action, Type type, SerializedActions_MonobehaviourManager implementation, List<MethodsOfType> classAndMethods, ref string debugMessage) {
@@ -11,6 +13,7 @@ namespace SerializedActions.UnitTests {
             bool allGood = true;
             MethodsOfType methodsOfType = GetStructByType(type.Name, classAndMethods);
             if (type.GetMethod(action.MethodName) == null) {
+                EditorUtility.SetDirty(implementation);
                 debugMessage += "----|".Colored(Color.yellow) + "WARNING:".Bold() + " Could not find method " + action.MethodName.Bold() + " in class".NewLine();
                 for (int i = 0; i < methodsOfType.MethodsNames.Count; i++) {
                     if (methodsOfType.MethodsNames[i] == action.MethodName) {
@@ -22,6 +25,9 @@ namespace SerializedActions.UnitTests {
                             debugMessage += ("----|" + "Conflic resolved".Bold()).Colored(Color.green) + " with actual method: " + methodActual.Name.Bold().NewLine();
                             action.MethodName = methodActual.Name;
                             methodsOfType.MethodsNames[i] = methodActual.Name;
+                            classAndMethods[i].MethodsNames[i] = methodActual.Name;
+                            EditorUtility.SetDirty(SerializedActions_MethodsRegisters.Instance());
+                            AssetDatabase.SaveAssets();
                         }
                         else {
                             // Error could not resolve method with registered name

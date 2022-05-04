@@ -135,7 +135,7 @@ namespace SerializedActions.Extensions {
         public static object[] GetParametersAsSystemObjects(this List<SerializedActions_SerializedParameters> parametersList) {
             object[] result = new object[parametersList.Count];
             for (int i = 0; i < result.Length; i++) {
-                result[i] = parametersList[i];
+                result[i] = parametersList[i].Value;
             }
             return result;
         }
