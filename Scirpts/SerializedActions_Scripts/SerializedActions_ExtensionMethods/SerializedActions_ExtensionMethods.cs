@@ -74,11 +74,11 @@ namespace SerializedActions.Extensions {
                     }
                 }
                 if (type == null)
-                    Debug.LogError("Error while trying to get type: " + typeName + " while de-serialising action");
+                    Debug.LogError("SerializedActions ERROR!".Colored("red") + " Could not retrieve type name: " + typeName.Bold().NewLine(2));
                 return type;
             }
             catch (Exception ex) {
-                Debug.LogError("Error while trying to get type: " + typeName + " while de-serialising action\n Error: " + ex.Message);
+                Debug.LogError("SerializedActions ERROR!".Colored("red") + " Could not retrieve type name: " + typeName.Bold().NewLine() + "Error: " + ex.Message);
                 return null;
             }
         }

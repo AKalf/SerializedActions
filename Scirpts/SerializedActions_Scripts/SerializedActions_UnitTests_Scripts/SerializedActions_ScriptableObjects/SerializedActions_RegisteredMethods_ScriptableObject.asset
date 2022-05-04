@@ -9,27 +9,36 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cb8d41da5343564793fe3efad8d9898, type: 3}
+  m_Script: {fileID: 11500000, guid: 1102f895919c81042bd14b3447ac4f5b, type: 3}
   m_Name: SerializedActions_RegisteredMethods_ScriptableObject
   m_EditorClassIdentifier: 
+  ShouldDebug: 0
   implementationsInProject:
   - {fileID: 0}
   actionsInProject:
   - TriggerInput: {fileID: 0}
     ClassName: TestMethods
-    MethodName: ThisIsMethod_A
+    MethodName: DebugGameobjectName
     Parameters:
-    - ParameterName: number
-      ParameterTypeName: Int32
-      thisType: 1
-      intValue: 10
+    - ParameterName: b
+      ParameterTypeName: Boolean
+      thisType: 4
+      intValue: 0
+      floatValue: 0
+      stringValue: 
+      boolValue: 1
+      objectValue: {fileID: 0}
+    - ParameterName: c
+      ParameterTypeName: Single
+      thisType: 2
+      intValue: 0
       floatValue: 0
       stringValue: 
       boolValue: 0
       objectValue: {fileID: 0}
-    - ParameterName: collider
-      ParameterTypeName: SphereCollider
-      thisType: 0
+    - ParameterName: var
+      ParameterTypeName: Int32
+      thisType: 1
       intValue: 0
       floatValue: 0
       stringValue: 
@@ -38,8 +47,8 @@ MonoBehaviour:
     TriggerType: 0
   classesAndMethods:
   - typeName: TestMethods
-    methodsIDs: 01000000
+    methodsIDs: 00000000
     methodsNames:
-    - ThisIsMethod_A
+    - DebugGameobjectNameb
   monoscripts:
-  - {fileID: 11500000, guid: d7bd410dd7019d644b91e1ca1f951502, type: 3}
+  - {fileID: 11500000, guid: 5d79b20bd8198344cb71cd5697f451a7, type: 3}

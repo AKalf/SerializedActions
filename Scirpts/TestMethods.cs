@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TestMethods : MonoBehaviour {
     [BaseImplementationMethod(0)]
-    public static void DebugGameobjectOrsOMEName(bool b, float c, int var) {
+    public static void DebugGameobjectNameb(bool b, float c, int var) {
         Debug.Log(b);
     }
     [BaseImplementationMethod(1)]

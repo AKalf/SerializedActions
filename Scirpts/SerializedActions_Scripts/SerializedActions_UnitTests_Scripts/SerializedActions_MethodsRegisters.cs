@@ -271,14 +271,14 @@ namespace SerializedActions.UnitTests {
                 Type type = null;
                 type = type.GetTypeFromName(typeName);
                 MethodInfo[] classMethods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                debugMessage += "\n\nPublic static methods found: " + classMethods.Length.NewLine();
+                debugMessage += "\nPublic static methods found: " + classMethods.Length.NewLine();
                 foreach (MethodInfo info in classMethods) {
-                    debugMessage += "Checking method: " + info.Name + " for attribute".NewLine();
+                    debugMessage += "Checking method: " + info.Name + " for attribute...  ";
                     BaseImplementationMethodAttribute attr = info.GetCustomAttribute<BaseImplementationMethodAttribute>();
                     if (attr != null)
-                        debugMessage += "Method: " + info.Name + " has id: " + attr.MethodID.NewLine();
+                        debugMessage += "Method: " + info.Name.Bold() + " has id: " + attr.MethodID.NewLine();
                     if (attr != null && methodsIDs.Contains(attr.MethodID)) {
-                        debugMessage += "\nMethod: " + info.Name + " has registered ID";
+                        debugMessage += "Method: " + info.Name.Bold() + "'s ID is already registered";
                         results.Add(info);
                     }
                 }
@@ -288,16 +288,16 @@ namespace SerializedActions.UnitTests {
             /// <param name="id">The ID registered from "BaseImplementationMethodAttribute" attribute</param>
             /// <returns>Returns the method whose "BaseImplementationMethodAttribute" attribute has the provided ID</returns>
             public MethodInfo GetMethodById(int id) {
-                debugMessage += "\n\nSearching for method with ID: " + id;
+                debugMessage += "\nSearching for method with ID: " + id + "...  ";
                 foreach (MethodInfo info in RegisterMethods()) {
                     BaseImplementationMethodAttribute attr = info.GetCustomAttribute<BaseImplementationMethodAttribute>();
                     if (attr.MethodID == id) {
-                        debugMessage += "\nMethod found: " + info.Name;
+                        debugMessage += "Method found: " + info.Name.Bold();
                         return info;
                     }
                 }
-                Debug.LogError("UIScreen_Base_Implementation_UnitTests ERROR! Could not find method with id: " + id + " for type: " + typeName.Bold());
-                debugMessage += "\nUIScreen_Base_Implementation_UnitTests ERROR! Could not find method with id: " + id + " for type: " + typeName.Bold();
+                Debug.LogError("SerializedActions ERROR!".Colored("red") + " Could not find method with id: " + id + " for type: " + typeName.Bold());
+                debugMessage += "SerializedActions ERROR!".Colored("red") + " Could not find method with id: " + id + " for type: " + typeName.Bold();
                 Debug.Log(debugMessage);
                 return null;
             }
