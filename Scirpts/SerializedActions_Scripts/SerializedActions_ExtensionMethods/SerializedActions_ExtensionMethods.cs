@@ -24,8 +24,8 @@ namespace SerializedActions.Extensions {
             string result = "<b>" + str.ToString() + "</b>";
             return result;
         }
-        public static string Colored(this string str, Color color) {
-            str = "<color=" + color.ToString().ToLower() + ">" + str + "</color>";
+        public static string Colored(this string str, string colorAsString) {
+            str = "<color=" + colorAsString + ">" + str + "</color>";
             return str;
         }
 

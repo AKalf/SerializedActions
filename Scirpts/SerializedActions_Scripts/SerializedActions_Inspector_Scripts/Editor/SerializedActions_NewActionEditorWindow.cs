@@ -150,7 +150,6 @@ namespace SerializedActions.Editors {
                     object newValue = SerializedActions_EditorDrawings.DrawField(param.Value, param.ParameterType, param.ParameterName, shouldShowName: true, shouldShowType: false);
                     if (oldValue != newValue) {
                         param.Value = newValue;
-                        param.ParameterType = newValue.GetType();
                         param.ParameterTypeName = param.ParameterType.Name;
                         EditorUtility.SetDirty(targetInstance);
                     }
@@ -177,7 +176,7 @@ namespace SerializedActions.Editors {
                         }
                     }
                 }
-                Debug.Log(debugMessage.NewLine(2));
+                Debug.Log(debugMessage.NewLine(1) + "##### END OF NEW ACTION PARAMETERS REGISTRATION #####".Bold().NewLine(1));
                 return false;
             }
         }
@@ -196,7 +195,7 @@ namespace SerializedActions.Editors {
                 SerializedActions.UnitTests.SerializedActions_MethodsRegisters.Instance().AddAction(targetInstance, action, monoscript, methodsRetrieved[selectedMethodNameIndex]);
                 EditorUtility.SetDirty(targetInstance);
                 Debugs.SerializedActions_Debugs.DebugRegisterNewAction(action, selectedTimeline, ref debugMessage);
-                Debug.Log(debugMessage.NewLine(2));
+                Debug.Log(debugMessage.NewLine(1) + "##### END OF NEW ACTION REGISTRATION #####".Bold().NewLine(1));
                 debugMessage = "";
 
                 // Reset values

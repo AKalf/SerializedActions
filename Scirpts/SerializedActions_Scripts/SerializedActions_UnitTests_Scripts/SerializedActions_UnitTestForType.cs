@@ -8,10 +8,10 @@ using MonoManager = SerializedActions_MonobehaviourManager;
 namespace SerializedActions.UnitTests {
     public class SerializedActions_UnitTestForType : SerializedActions_MethodsRegisters {
         public static Type CheckType(SerializedAction_Container action, List<MonoScript> monoscripts, MonoManager implementation, List<MethodsOfType> classesAndMethods) {
-            string debugMessage = "\n\n-----|Checking Class Name for action with " +
-                "Method: " + action.MethodName.Bold().Comma() +
-                "Implementation: " + implementation.gameObject.name.Bold().Comma() +
-                "Class name: " + action.ClassName.Bold().NewLine();
+            string debugMessage = "\n\n-----|TYPE UNIT TEST " +
+                " --- CLASS NAME: " + action.ClassName.Bold() +
+                " --- METHOD: " + action.MethodName.Bold() +
+                " --- MANAGER: " + implementation.gameObject.name.Bold().NewLine(1);
             Type resolvedType = null;
             resolvedType = resolvedType.GetTypeFromName(action.ClassName);
 
@@ -25,16 +25,16 @@ namespace SerializedActions.UnitTests {
                 debugMessage += (string.Format(TypeConflictWarning, action.ClassName, implementation.gameObject.name));
 
                 for (int i = 0; i < classesAndMethods.Count; i++) {
-                    MethodsOfType cm = classesAndMethods[i];
-                    if (cm.TypeName == action.ClassName) {
-                        Type foundType = CheckAndRetrieveClass(cm, monoscripts[i], ref debugMessage);
-                        cm.TypeName = foundType.Name;
+                    MethodsOfType methodOfType = classesAndMethods[i];
+                    if (methodOfType.TypeName == action.ClassName) {
+                        Type foundType = CheckAndRetrieveClass(methodOfType, monoscripts[i], ref debugMessage);
+                        methodOfType.TypeName = foundType.Name;
                         action.ClassName = foundType.Name;
                         // Debug resolve
                         debugMessage += string.Format(ResolvedConflict, action.ClassName, foundType.Name);
                         Debug.Log(string.Format(ResolvedConflict, action.ClassName, foundType.Name), implementation.gameObject);
                         classesAndMethods[i].TypeName = foundType.Name;
-                        EditorUtility.SetDirty(SerializedActions_MethodsRegisters.Instance());
+                        EditorUtility.SetDirty(Instance());
                         AssetDatabase.SaveAssets();
                         return foundType;
                     }
@@ -70,35 +70,34 @@ namespace SerializedActions.UnitTests {
         /// </summary>
         private const string TypeConflictWarning = "<color=Yellow>WARNING</color>: " +
             "Trying to resolve conflict of " +
-            "Class name: <b>{0}</b>, " + // Class name 
-            "Implementation: <b>{1}</b>\n"; // Implementation name
+            " -- CLASS: <b>{0}</b>, " + // Class name 
+            " -- MANAGER: <b>{1}</b>\n"; // Implementation name
         /// <summary>
         /// 2 Parameters:
         ///- Class name
         ///- Resolved class name
         /// </summary>
-        private const string ResolvedConflict = "<color=Green>----|</color>" +
-            "Conflict resolved: " +
-            "Class name: <b>{0}</b>, " + // Class name
-            "Resolved with class: <b>{1}</b>\n"; // Resolved class name
+        private const string ResolvedConflict = "<color=Green>----|" +
+            "Conflict resolved: </color>" +
+            "-- CLASS: <b>{0}</b>, " + // Class name
+            " -- ACTUAL CLASS: <b>{1}</b>\n"; // Resolved class name
         /// <summary>
         /// 2 Parameters:
         ///- Class name
         ///- Resolved class name
         /// </summary>
         private const string CouldNotResolveType = "SerializedAction <color=Red>----|ERROR</color>:" +
-            "Conflict for " +
-            "Class name: <b>{0}</b>, " + // Class name
-            "could not be resolved. You need to do it manually.\n";
+            "Could NOT resolve conflict of class. " +
+            "CLASS: <b>{0}</b>, " + // Class name
+            "you need to do it manually.\n";
         /// <summary>
         /// 2 Parameters:
         ///- Class name
         ///- Resolved class name
         /// </summary>
         private const string CouldNotFindTypeInMonoScript = "SerializedAction <color=Red>----|ERROR</color>:" +
-            "Could not find " +
-            "Class name: +<b>{0}</b>, in " + // Class name
-            "Monoscript: <b>{1}</b>. " + // Monoscript
+            "Could NOT find CLASS with NAME " + "<b>{0}</b>, in " + // Class name
+            " -- MONOSCRIPT : <b>{1}</b>. " + // Monoscript
             "You need to do it manually.\n";
         #endregion
     }

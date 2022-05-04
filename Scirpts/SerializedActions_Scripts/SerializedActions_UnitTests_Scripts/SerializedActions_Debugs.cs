@@ -38,7 +38,7 @@ namespace SerializedActions.Debugs {
                 }
             }
             catch (Exception ex) {
-                Debug.LogError("SerializedAction " + "Error".Colored(Color.red) + " during SerializedAction creation:".NewLine() +
+                Debug.LogError("SerializedAction " + "Error".Colored("red") + " during SerializedAction creation:".NewLine() +
                     debugMessage.NewLine(2) + "ERROR: ".Bold() + ex.Message.NewLine(2));
                 debugMessage = "";
             }

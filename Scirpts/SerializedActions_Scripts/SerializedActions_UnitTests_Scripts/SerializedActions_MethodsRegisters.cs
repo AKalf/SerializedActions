@@ -15,19 +15,13 @@ namespace SerializedActions.UnitTests {
     [InitializeOnLoad]
     public class SerializedActions_MethodsRegisters : ScriptableObject {
 
-        [NonSerialized]
-        private static SerializedActions_MethodsRegisters instance = null;
+        [NonSerialized] private static SerializedActions_MethodsRegisters instance = null;
+        [SerializeField] public bool ShouldDebug = true;
 
-        [HideInInspector]
-        [SerializeField]
-        public List<MonoManager> implementationsInProject = new List<MonoManager>();
-        [SerializeField]
-        [HideInInspector]
-        public List<ActionContainer> actionsInProject = new List<ActionContainer>();
-        [SerializeField]
-        public List<MethodsOfType> classesAndMethods = new List<MethodsOfType>();
-        [SerializeField]
-        public List<MonoScript> monoscripts = new List<MonoScript>();
+        [SerializeField][HideInInspector] public List<MonoManager> implementationsInProject = new List<MonoManager>();
+        [SerializeField][HideInInspector] public List<ActionContainer> actionsInProject = new List<ActionContainer>();
+        [SerializeField] public List<MethodsOfType> classesAndMethods = new List<MethodsOfType>();
+        [SerializeField] public List<MonoScript> monoscripts = new List<MonoScript>();
 
         private static EditorApplication.CallbackFunction editorCallback = () => Instance().CheckActions();
         private static string debugMessage = "";
@@ -66,18 +60,18 @@ namespace SerializedActions.UnitTests {
 
         /// <summary>Check all SerializedActions in project for errors</summary>
         public void CheckActions() {
-            debugMessage = "----|Starting checking actions...".Bold();
+            debugMessage = "----|Scanning for corrupted SerializedActions...".Bold();
             FindImplementations();
-            Debug.Log(debugMessage.NewLine(2));
+            if (ShouldDebug) Debug.Log(debugMessage.NewLine(2));
             if (implementationsInProject.Count > 0) {
                 foreach (MonoManager imple in implementationsInProject) {
-                    debugMessage = ("Initialising tests for implementation: " + imple.name.Bold());
+                    debugMessage = "----|Starting tests for implementation: " + imple.name.Bold();
                     CheckImplementation(imple);
                 }
 
             }
             else {
-                debugMessage += "\nNo implementations found!".Colored(Color.red);
+                debugMessage += "\nNo implementations found!".Colored("red");
                 Debug.Log(debugMessage.NewLine(2));
                 debugMessage = "";
             }
@@ -138,31 +132,31 @@ namespace SerializedActions.UnitTests {
             if (imple.OnAwakeActions.Count > 0) {
                 debugMessage += "Checking " + "On Awake".Bold() + " list";
                 CheckList(imple.OnAwakeActions, imple);
-                Debug.Log(debugMessage.NewLine(2));
+                if (ShouldDebug) Debug.Log(debugMessage.NewLine(1));
                 debugMessage = "";
             }
             if (imple.OnStartActions.Count > 0) {
                 debugMessage += "Checking " + "On Start".Bold() + " list";
                 CheckList(imple.OnStartActions, imple);
-                Debug.Log(debugMessage.NewLine(2));
+                if (ShouldDebug) Debug.Log(debugMessage.NewLine(1));
                 debugMessage = "";
             }
             if (imple.OnEnableActions.Count > 0) {
                 debugMessage += "Checking " + "On Enable".Bold() + " list";
                 CheckList(imple.OnEnableActions, imple);
-                Debug.Log(debugMessage.NewLine(2));
+                if (ShouldDebug) Debug.Log(debugMessage.NewLine(1));
                 debugMessage = "";
             }
             if (imple.OnDisableActions.Count > 0) {
                 debugMessage += "Checking " + "On Disalbe".Bold() + " list";
                 CheckList(imple.OnDisableActions, imple);
-                Debug.Log(debugMessage.NewLine(2));
+                if (ShouldDebug) Debug.Log(debugMessage.NewLine(1));
                 debugMessage = "";
             }
             if (imple.OnInteractionActions.Count > 0) {
-                debugMessage += "Checking " + "On Select".Bold() + " list";
+                debugMessage += "Checking " + "On Interaction".Bold() + " list";
                 CheckList(imple.OnInteractionActions, imple);
-                Debug.Log(debugMessage.NewLine(2));
+                if (ShouldDebug) Debug.Log(debugMessage.NewLine(1));
                 debugMessage = "";
             }
 
@@ -222,7 +216,7 @@ namespace SerializedActions.UnitTests {
             for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++) {
                 Scene scene = SceneManager.GetSceneByBuildIndex(i);
                 if (scene.IsValid() == false) {
-                    Debug.LogError("Serialized Action ERROR: ".Colored(Color.red).Bold() + "Could retrieve scene with build-index: " + i);
+                    Debug.LogError("Serialized Action ERROR: ".Colored("red").Bold() + "Could retrieve scene with build-index: " + i);
                     continue;
                 }
                 GameObject[] rootGameobjects = scene.GetRootGameObjects();

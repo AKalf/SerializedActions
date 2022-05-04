@@ -20,9 +20,9 @@ namespace SerializedActions.UnitTests {
             implementation = imple;
             method = methodInfo;
 
-            debugMessage = "\n-----|" + "UNIT TEST: SerializedAction Parameters".Bold().NewLine() +
-                   "Method " + method.Name.Bold().NewLine() +
-                   "Implementation: " + implementation.gameObject.name.Bold().NewLine();
+            debugMessage = "\n-----|" + "PARAMETERS UNIT TEST:" +
+                   " --- METHOD: " + methodInfo.Name.Bold() +
+                   " --- MANAGER: " + implementation.gameObject.name.Bold().NewLine();
 
             actual = method.GetParameters();
             debugMessage += "Actual parameters: " + actual.Length.Bold().Comma() + " deserialized: " + serializedAction.Parameters.Count.Bold();
@@ -46,10 +46,10 @@ namespace SerializedActions.UnitTests {
                 ForceResolve(resolvedArguments);
             }
             else {
-                debugMessage += "Types were " + "correct!".Colored(Color.green);
+                debugMessage += "Types were " + "correct!".Colored("green");
                 for (int i = 0; i < actual.Length; i++)
                     action.Parameters[i].ParameterName = actual[i].Name;
-                Debug.Log(debugMessage.NewLine(2));
+                if (Instance().ShouldDebug) Debug.Log(debugMessage.NewLine(2));
                 return true;
             }
             Debug.Log(debugMessage.NewLine(2));
@@ -90,7 +90,6 @@ namespace SerializedActions.UnitTests {
                         && AreStringsEqual(actual[j].Name, action.Parameters[i].ParameterName)
                         && AreStringsEqual(actual[j].ParameterType.Name, action.Parameters[i].ParameterTypeName)) {
                         // BODY:
-
                         string msg = string.Format(ResolvedConflict, actual[j].Name, actual[j].ParameterType.Name, j, method.Name, action.Parameters[i].ToString());
                         debugMessage += msg;
                         Debug.LogWarning(msg, implementation.gameObject);

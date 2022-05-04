@@ -119,7 +119,6 @@ namespace SerializedActions.Editors {
                     object newValue = SerializedActions_EditorDrawings.DrawField(param.Value, param.ParameterType, param.ParameterName);
                     if (newValue != null && oldArg != null && oldArg.Equals(newValue) == false) {
                         param.Value = newValue;
-                        param.ParameterType = newValue.GetType();
                         param.ParameterTypeName = param.ParameterType.Name;
                         areThereChanges = true;
                     }

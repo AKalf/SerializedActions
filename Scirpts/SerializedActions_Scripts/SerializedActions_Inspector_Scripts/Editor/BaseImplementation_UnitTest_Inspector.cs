@@ -107,7 +107,7 @@ namespace SerializedActions.Editors {
             for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++) {
                 Scene scene = SceneManager.GetSceneByBuildIndex(i);
                 if (scene.IsValid() == false) {
-                    Debug.LogError("Serialized Action ERROR: ".Colored(Color.red).Bold() + "Could retrieve scene with build-index: " + i);
+                    Debug.LogError("Serialized Action ERROR: ".Colored("red").Bold() + "Could retrieve scene with build-index: " + i);
                     continue;
                 }
                 GameObject[] rootGameobjects = scene.GetRootGameObjects();

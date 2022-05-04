@@ -70,19 +70,19 @@ public class SerializedActions_MonobehaviourManager : MonoBehaviour {
     private void SetGameObjectTrigger(SerializedAction_Container action) {
         GameObject triggerAsG = null;
 #if UNITY_EDITOR
-        AddDebug_ActionTrigger(action, triggerAsG);
         try {
 #endif
             if (action.TriggerInput.GetType() == typeof(GameObject))
                 triggerAsG = action.TriggerInput as GameObject;
-            else if (action.TriggerInput.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+            else if (action.TriggerInput.GetType() == typeof(MonoBehaviour) || action.TriggerInput.GetType().IsSubclassOf(typeof(MonoBehaviour)))
                 triggerAsG = ((MonoBehaviour)action.TriggerInput).gameObject;
-            else if (action.TriggerInput.GetType().IsSubclassOf(typeof(Component)))
+            else if (action.TriggerInput.GetType() == typeof(Component) || action.TriggerInput.GetType().IsSubclassOf(typeof(Component)))
                 triggerAsG = ((Component)action.TriggerInput).gameObject;
-
+            Debug.LogError(triggerAsG.name);
             EventTrigger trigger = triggerAsG.GetComponent<EventTrigger>();
             if (trigger == null)
                 trigger = triggerAsG.gameObject.AddComponent<EventTrigger>();
+            Debug.LogError(trigger.name);
             EventTrigger.Entry entry = new EventTrigger.Entry();
             entry.eventID = action.TriggerType;
             entry.callback.AddListener(data => {
@@ -92,15 +92,15 @@ public class SerializedActions_MonobehaviourManager : MonoBehaviour {
                     action.Action.Invoke();
             });
             trigger.triggers.Add(entry);
+            Debug.LogError("Event added");
 #if UNITY_EDITOR
+            AddDebug_ActionTrigger(action, triggerAsG);
         }
         catch (Exception ex) {
             CatchListException(ex, "On Selectable");
         }
 #endif
     }
-
-
     private void SetSelectableTrigger(SerializedAction_Container action) {
         Selectable input = action.TriggerInput as Selectable;
 #if UNITY_EDITOR

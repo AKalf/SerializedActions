@@ -9,8 +9,18 @@ namespace SerializedActions {
         [SerializeField] public string ParameterName = "";
         [SerializeField] public string ParameterTypeName = "";
         [NonSerialized] private Type parameterType = null;
-        public virtual Type ParameterType { get { if (parameterType == null) parameterType = parameterType.GetTypeFromName(ParameterTypeName); return parameterType; } set { parameterType = value; ParameterTypeName = parameterType.Name; } }
-        [SerializeField] [HideInInspector] private SupportedTypes thisType = SupportedTypes.UnityObject;
+        public virtual Type ParameterType {
+            get {
+                if (parameterType == null)
+                    parameterType = parameterType.GetTypeFromName(ParameterTypeName);
+                return parameterType;
+            }
+            //set {
+            //    parameterType = value;
+            //    ParameterTypeName = parameterType.Name;
+            //}
+        }
+        [SerializeField][HideInInspector] private SupportedTypes thisType = SupportedTypes.UnityObject;
         public SupportedTypes ThisType => thisType;
         [SerializeField] private int intValue = 0;
         [SerializeField] private float floatValue = 0;
@@ -40,7 +50,6 @@ namespace SerializedActions {
 
         private SerializedActions_SerializedParameters() { }
         public static SerializedActions_SerializedParameters CreateSerializedParameter(string parameterName, Type type, object value) {
-            Debug.Log("Creating new Serialized parameter: " + parameterName + ", of type: " + type.Name + " and value: " + value);
             SerializedActions_SerializedParameters newParam = new SerializedActions_SerializedParameters();
             if (type.IsIntType()) {
                 newParam.thisType = SupportedTypes.Int;
