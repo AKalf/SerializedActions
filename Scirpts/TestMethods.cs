@@ -8,7 +8,7 @@ public class TestMethods : MonoBehaviour {
         Debug.Log(b);
     }
     [BaseImplementationMethod(1)]
-    public static void DebugTheOther(int number, string aString, bool b, GameObject collider) {
+    public static void ThisIsMethod_A(int number, Collider collider) {
         Debug.Log("number " + number);
     }
 }

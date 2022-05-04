@@ -115,9 +115,12 @@ namespace SerializedActions.UnitTests {
             }
         }
         private static void ForceResolve(SerializedParameter[] resolvedArguments) {
+            SerializedParameter[] oldParams = action.Parameters.ToArray();
             action.Parameters.Clear();
             for (int i = 0; i < resolvedArguments.Length; i++) {
                 if (resolvedArguments[i] == null) {
+                    if (oldParams[i].ParameterName == actual[i].Name && oldParams[i].ParameterType == actual[i].ParameterType)
+                        action.Parameters.Add(oldParams[i]);
                     action.Parameters.Add(SerializedParameter.CreateSerializedParameter(
                         actual[i].Name, actual[i].ParameterType, actual[i].ParameterType.GetDefaultValue()));
                     string debugMsg = string.Format(NeedToAssignValueToParameter, implementation.name, method.Name, action.ClassName, actual[i].ParameterType.Name, actual[i].Name, i);

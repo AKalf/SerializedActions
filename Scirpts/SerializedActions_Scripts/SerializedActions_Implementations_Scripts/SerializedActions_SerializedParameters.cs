@@ -10,7 +10,7 @@ namespace SerializedActions {
         [SerializeField] public string ParameterTypeName = "";
         [NonSerialized] private Type parameterType = null;
         public virtual Type ParameterType { get { if (parameterType == null) parameterType = parameterType.GetTypeFromName(ParameterTypeName); return parameterType; } set { parameterType = value; ParameterTypeName = parameterType.Name; } }
-        [SerializeField][HideInInspector] private SupportedTypes thisType = SupportedTypes.UnityObject;
+        [SerializeField] [HideInInspector] private SupportedTypes thisType = SupportedTypes.UnityObject;
         public SupportedTypes ThisType => thisType;
         [SerializeField] private int intValue = 0;
         [SerializeField] private float floatValue = 0;
@@ -77,10 +77,10 @@ namespace SerializedActions {
             }
             else {
                 newParam.thisType = SupportedTypes.UnityObject;
-                newParam.parameterType = typeof(UnityEngine.Object);
+                newParam.parameterType = type;
                 newParam.ParameterTypeName = newParam.parameterType.Name;
                 newParam.ParameterName = parameterName;
-                newParam.objectValue = value == null || value.GetType() == typeof(DBNull) ? null : (UnityEngine.Object)value;
+                newParam.objectValue = value == null || value.GetType() == typeof(DBNull) ? null : Convert.ChangeType(value, type) as UnityEngine.Object;
                 return newParam;
             }
         }
